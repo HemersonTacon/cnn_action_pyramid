@@ -1,6 +1,8 @@
 import argparse
 import math
 
+encode = "utf-8"
+
 def getArgs():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("name", help="Input file")
@@ -81,7 +83,7 @@ def generate_cnnflows_of_snippet(first_frame, last_frame):
 def main(args):
 	
 	bkf_file = args.name + ".bkf"
-	bkf = open(bkf_file, "r", encoding="utf-16")
+	bkf = open(bkf_file, "r", encoding=encode)
 	# list with key-frame numbers
 	key_frames = [int(line) for line in bkf.readlines()]
 	
@@ -89,7 +91,7 @@ def main(args):
 	#print(key_frames)
 	
 	fc7_file = args.name + ".fc7"
-	fc7 = open(fc7_file, "r", encoding="utf-16")
+	fc7 = open(fc7_file, "r", encoding=encode)
 	
 	# frames with 4096 features each
 	global frames
@@ -98,7 +100,7 @@ def main(args):
 	levels = args.level
 	
 	out_file = args.name + ".cnnf"
-	output = open(out_file, "w", encoding="utf-16")
+	output = open(out_file, "w", encoding=encode)
 	
 	first_frame = 1
 	for i in range(len(key_frames)):

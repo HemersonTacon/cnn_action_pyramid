@@ -1,6 +1,8 @@
 import random
 import argparse
 
+encode = "utf-8"
+
 def getArgs():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-f", "--fc7", help="Creates a fc7 file", action='store_true')
@@ -20,7 +22,7 @@ def create_fc7_file(name="fc7"):
 	frames = 100
 	
 	output_file = name + ".fc7"
-	output = open(output_file, "w", encoding="utf-16")
+	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(frames):
 		for j in range(4096):
@@ -40,7 +42,7 @@ def create_keyframes_file(name="keyframes"):
 	number = 0
 	
 	output_file = name + ".bkf"
-	output = open(output_file, "w", encoding="utf-16")
+	output = open(output_file, "w", encoding=encode)
 	
 	number = random.randint(minimum, maximum)
 
@@ -68,7 +70,7 @@ def create_cnnflows_file(name="cnnflows", level=4):
 		flows = 2**3 - 1 + 10
 		
 	output_file = name + ".cnnf"
-	output = open(output_file, "w", encoding="utf-16")
+	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(snipets):
 		for j in range(flows):
@@ -93,7 +95,7 @@ def create_pca_file(name="pca", level=4):
 		flows = 2**3 - 1 + 10
 		
 	output_file = name + ".pca"
-	output = open(output_file, "w", encoding="utf-16")
+	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(snipets):
 		for j in range(flows):
@@ -112,7 +114,7 @@ def create_codebooks_file(name="codebooks"):
 	size = 4000
 	
 	output_file = name + ".dic"
-	output = open(output_file, "w", encoding="utf-16")
+	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(size):
 		for j in range(100):
@@ -129,7 +131,7 @@ def create_descriptors_file(name="descriptors", level = 4):
 	size = 4000
 	
 	output_file = name + ".desc"
-	output = open(output_file, "w", encoding="utf-16")
+	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(level):
 		for j in range(size):
