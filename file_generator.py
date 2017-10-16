@@ -9,6 +9,7 @@ def getArgs():
 	parser.add_argument("-p", "--pca", help="Creates a CNN flows reduced by PCA file with the informed levels in the pyramid", type=int, choices=[1, 2, 3, 4])
 	parser.add_argument("-b", "--codebooks", help="Creates a codebooks file", action='store_true')
 	parser.add_argument("-d", "--descriptors", help="Creates a video descriptors file with the informed levels in the pyramid", type=int, choices=[1, 2, 3, 4])
+	parser.add_argument("-n", "--name", help="Output file name")
 	parser.add_argument("-s", "--seed", help="Seed of the random function", type=int)
 	return parser.parse_args()
 	
@@ -56,7 +57,7 @@ def create_keyframes_file(name="keyframes"):
 	output.close()
 
 def create_cnnflows_file(name="cnnflows", level=4):
-	minimum = 1
+	minimum = -999
 	maximum = 999
 	flows = 1
 	snipets = 4;
@@ -146,39 +147,67 @@ def main(args):
 	# If ommited, args.seed gets None value and the seed uses randomness sources provided by the OS
 	random.seed(args.seed)
 	
+	if args.name:
+		name = args.name
 	
 	if args.fc7:
-		create_fc7_file()
+		if args.name:
+			create_fc7_file(args.name)
+		else:
+			create_fc7_file()
 		no_args_flag = False
 		
 	
 	if args.keyframes:
-		create_keyframes_file()
+		if args.name:
+			create_keyframes_file(args.name)
+		else:
+			create_keyframes_file()
 		no_args_flag = False
 	
 	if args.cnnflows:
-		create_cnnflows_file(level=args.cnnflows)
+		if args.name:
+			create_cnnflows_file(args.name)
+		else:
+			create_cnnflows_file(level=args.cnnflows)
 		no_args_flag = False
 	
 	if args.pca:
-		create_pca_file(level=args.pca)
+		if args.name:
+			create_pca_file(args.name)
+		else:
+			create_pca_file(level=args.pca)
 		no_args_flag = False
 	
 	if args.codebooks:
-		create_codebooks_file()
+		if args.name:
+			create_codebooks_file(args.name)
+		else:
+			create_codebooks_file()
 		no_args_flag = False
 	
 	if args.descriptors:
-		create_descriptors_file(level=args.descriptors)
+		if args.name:
+			create_descriptors_file(args.name)
+		else:
+			create_descriptors_file(level=args.descriptors)
 		no_args_flag = False
 	
 	if no_args_flag:
-		create_fc7_file()
-		create_keyframes_file()
-		create_cnnflows_file()
-		create_pca_file()
-		create_codebooks_file()
-		create_descriptors_file()
+		if args.name:
+			create_fc7_file(args.name)
+			create_keyframes_file(args.name)
+			create_cnnflows_file(args.name)
+			create_pca_file(args.name)
+			create_codebooks_file(args.name)
+			create_descriptors_file(args.name)
+		else:
+			create_fc7_file()
+			create_keyframes_file()
+			create_cnnflows_file()
+			create_pca_file()
+			create_codebooks_file()
+			create_descriptors_file()
 
 		
 if __name__ == '__main__':
