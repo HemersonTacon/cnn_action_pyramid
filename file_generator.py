@@ -6,6 +6,7 @@ encode = "utf-8"
 def getArgs():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-f", "--fc7", help="Creates a fc7 file", action='store_true')
+	parser.add_argument("-l", "--lsh", help="Creates a binary file", type=int)
 	parser.add_argument("-k", "--keyframes", help="Creates a key frames file", action='store_true')
 	parser.add_argument("-c", "--cnnflows", help="Creates a CNN flows file with the informed levels in the pyramid", type=int, choices=[1, 2, 3, 4])
 	parser.add_argument("-p", "--pca", help="Creates a CNN flows reduced by PCA file with the informed levels in the pyramid", type=int, choices=[1, 2, 3, 4])
@@ -29,6 +30,38 @@ def create_fc7_file(name="fc7"):
 			feature = random.uniform(minimum, maximum)
 			output.write(str(feature)+" ")
 		output.write("\n")
+		
+	output.close()
+	
+def create_lsh_file(name="lsh", num_bits=16):
+	minimum = 1
+	maximum = 40
+	frames = 100
+	count = 0
+	
+	output_file = name + ".lsh"
+	output = open(output_file, "w", encoding=encode)
+	
+	# Pick a random integer between 0 and 2 power num_bits
+	value = random.randint(0, 2**num_bits)	
+	# Converts variable value to binary with num_bits size and zero paded at left. More info: https://stackoverflow.com/questions/10411085/converting-integer-to-binary-in-python
+	bin_value = list(('{0:0'+str(num_bits)+'b}').format(value))
+	
+	
+	while count < frames:
+	
+		number = random.randint(minimum, min(maximum, frames - count))
+		str_value = "".join(bin_value)
+		
+		for i in range(number):
+			output.write(str_value+"\n")
+			
+		count = count + number
+		
+		# Flip one bit at index position
+		index = random.randint(0, num_bits - 1)	
+		bin_value[index] = str(abs (int( bin_value[index]) - 1 ))
+	
 		
 	output.close()
 
@@ -149,8 +182,6 @@ def main(args):
 	# If ommited, args.seed gets None value and the seed uses randomness sources provided by the OS
 	random.seed(args.seed)
 	
-	if args.name:
-		name = args.name
 	
 	if args.fc7:
 		if args.name:
@@ -159,7 +190,13 @@ def main(args):
 			create_fc7_file()
 		no_args_flag = False
 		
-	
+	if args.lsh:
+		if args.name:
+			create_lsh_file(args.name, args.lsh)
+		else:
+			create_lsh_file()
+		no_args_flag = False
+		
 	if args.keyframes:
 		if args.name:
 			create_keyframes_file(args.name)
@@ -198,6 +235,7 @@ def main(args):
 	if no_args_flag:
 		if args.name:
 			create_fc7_file(args.name)
+			create_lsh_file(args.name, args.lsh)
 			create_keyframes_file(args.name)
 			create_cnnflows_file(args.name)
 			create_pca_file(args.name)
@@ -205,6 +243,7 @@ def main(args):
 			create_descriptors_file(args.name)
 		else:
 			create_fc7_file()
+			create_lsh_file()
 			create_keyframes_file()
 			create_cnnflows_file()
 			create_pca_file()
