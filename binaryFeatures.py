@@ -1,67 +1,62 @@
-from lshash import LSHash
-import bitarray
-import random
+from lshash import lshash
+import argparse
 
 encode = "utf-8"
-nFrames = 100;
-codeLength = 16
-numberOfFeatures = 4096
 
+def get_Args():
+	parser = argparse.ArgumentParser()
+	parser.add_argument("name", help="Input file")
+	parser.add_argument("bits", type=int, help="Number of bits of codification")
+	parser.add_argument("-o", "--outdir", help="Output directory")
+	return parser.parse_args()
+	
+def read_fc7_file(name):
 
-frameList = []
-fc7_file = "fc7" + ".fc7"
-fc7 = open(fc7_file, "r")
-frames = fc7.readlines()	
-output = open("codigoBinarios.lsh", "w")
+	fc7_file = name + ".fc7"
+	fc7 = open(fc7_file, "r", encoding=encode)
+	# list with frame features
+	frames = fc7.readlines()
+	fc7.close()
+	return frames
+	
+def codify_frames(frames, num_bits):
+	
+	temp = frames[0].split()
+	num_features = len(temp)
+	# Initializing hash
+	lsh = lshash.LSHash(num_bits, num_features)
+	# Getting plane of first and unique hash table
+	plane = lsh.uniform_planes[0]
+	bin_frames = []
+	
+	for i in frames:
+		# Extracting features as float list
+		features = list(map(float, i.split()))
+		bin_frames.append(lsh._hash(plane, features))
+	
+	return bin_frames
+	
+def write_binary_frames(name, outdir, bin_frames):
 
-for i in range (len(frames)):
-	print("\n"+ str(i))
-	#frameList.append(frames[i])				
-	fc7Features = frames[i].split()
-
-	#for i in range (len(fc7Features)):
-		#fc7Features[i] = float(fc7Features[i])
-	fc7Features = map(float, fc7Features)
-		
-
-	################################################################
-	# 		Gerando features aleatorias		
-
-
-	#	fc7Features = random.sample(range(1000000), numberOfFeatures)
-	#	fc7FeaturesCompare = random.sample(range(1000000), numberOfFeatures)
-
-	################################################################
-
-
-	lsh = LSHash(codeLength ,numberOfFeatures)
-	lsh._init_uniform_planes()
-	planes = lsh._generate_uniform_planes()
-	fc7BinaryCode = lsh._hash(planes,fc7Features)
-	#	fc7BinaryCode2 = lsh._hash(planes,fc7FeaturesCompare)
-
-
-
-	###############################################################
-	#		Printando os valores dos codigos
-
-	#	print(fc7BinaryCode1)
-	#	print(fc7BinaryCode2)
-
-	###############################################################
-
-	#	hammingDistance = lsh.hamming_dist( fc7BinaryCode1, fc7BinaryCode2)
-	#	print("A distancia de hamming e: " + str(hammingDistance))
-	frameList.append(fc7BinaryCode)
-	print(frameList)
-	output.write(fc7BinaryCode + "\n")
-
-output.close()
-
-
-
-
-
+	out_file = outdir + name + ".lsh"
+	
+	# With automatically closes output
+	with open(out_file, "w", encoding=encode) as output:
+		# Joining frames binary coded with \n
+		output.write("\n".join(bin_frames))
+	
+def main(args):
+	
+	frames = read_fc7_file(args.name)
+	binary_frames = codify_frames(frames, args.bits)
+	if not args.outdir:
+		args.outdir = ''
+	write_binary_frames(args.name, args.outdir, binary_frames)
+	
+if __name__ == '__main__':
+	# parse arguments
+	args = get_Args()
+	main(args)
 
 
 	
