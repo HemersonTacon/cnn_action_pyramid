@@ -1,0 +1,86 @@
+import multiprocessing as mp
+import subprocess as sp
+import argparse
+
+encode = "utf-8"
+charge_factor = 10
+threads_file = 'threads.txt'
+
+def get_Args():
+	parser = argparse.ArgumentParser()
+	parser.add_argument("script", help="Script name to run in parallel")
+	parser.add_argument("files", help="Name of the file with the names of the input files (without extension) for the script")
+	parser.add_argument("params", help="Name of the file with the extra parameters of script")
+	return parser.parse_args()
+
+def get_threads():
+
+	try:
+		with open(threads_file, "r", encoding=encode) as input:
+			# Reading number of threads
+			threads = int(input.read())
+			return threads
+	except Exception as e:
+		print("A problem ocurred trying to read the number of threads: ", e)
+		
+def get_files(files):
+
+	try:
+		with open(files, "r", encoding=encode) as input:
+			# Reading names of input files to the script
+			names = input.read().splitlines()
+			return names
+	except Exception as e:
+		print("A problem ocurred trying to read the file with the names of inputs: ", e)
+		return 1
+		
+def get_params(params_file):
+
+	try:
+		with open(params_file, "r", encoding=encode) as input:
+			# Reading names of input files to the script
+			params = input.readline().split()
+			return params
+	except Exception as e:
+		print("A problem ocurred trying to read the file with the parameters: ", e)
+		return 1
+	
+def parallelize(script, files, params):
+	
+	names = get_files(files)
+	params = get_params(params)
+	# Number of scripts already executed
+	executions = 0
+	# Maximun number of scripts executions
+	max_executions = len(names)
+	
+	while executions < max_executions:
+		
+		num_threads = get_threads()
+		executions_interval = min(charge_factor*num_threads, max_executions - executions)
+		configurations = []
+		
+		for i in range(executions_interval):
+			print("Params: ", params)
+			command = list(params)
+			command.insert(0, names[executions])
+			command.insert(0, script)
+			command.insert(0, 'python')
+			print("Command: ", command)
+			configurations.append(command)
+			executions = executions + 1
+			
+		pool = mp.Pool(processes=num_threads)
+		pool.map(sp.call, configurations)
+		pool.close()
+		
+		
+	
+def main(args):
+	
+	parallelize(args.script, args.files, args.params)
+	
+if __name__ == '__main__':
+	# parse arguments
+	args = get_Args()
+	main(args)
