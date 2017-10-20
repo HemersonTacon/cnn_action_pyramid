@@ -3,15 +3,15 @@ import math
 
 encode = "utf-8"
 
-def getArgs():
+def get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("name", help="Input file")
 	parser.add_argument("level", type=int, help="Number of pyramid levels", choices=[1, 2, 3, 4])
 	#parser.add_argument("-s", "--seed", help="Seed of the random function", type=int)
 	return parser.parse_args()
 	
-def generate_cnnflows_of_snippet(first_frame, last_frame):
-	global frames
+def generate_cnn_flows_of_snippet(first_frame, last_frame, frames, level):
+	#global frames
 	cnn_flows = []
 	
 	first_frame_features = frames[first_frame - 1].split()
@@ -20,7 +20,7 @@ def generate_cnnflows_of_snippet(first_frame, last_frame):
 	cnn_flow = [float(b) - float(a) for a, b in zip(first_frame_features, last_frame_features)]
 	cnn_flows.append(cnn_flow)
 	
-	if levels > 1:
+	if level > 1:
 		sub_snippet_size = math.floor((last_frame - first_frame + 1)/2)
 		rest = (last_frame - first_frame + 1) - (2*sub_snippet_size)
 		x = first_frame
@@ -39,7 +39,7 @@ def generate_cnnflows_of_snippet(first_frame, last_frame):
 			
 			x = y + 1
 		
-	if levels > 2:
+	if level > 2:
 		sub_snippet_size = math.floor((last_frame - first_frame + 1)/4)
 		rest = (last_frame - first_frame + 1) - (4*sub_snippet_size)
 		x = first_frame
@@ -58,7 +58,7 @@ def generate_cnnflows_of_snippet(first_frame, last_frame):
 			
 			x = y + 1
 			
-	if levels > 3:
+	if level > 3:
 		sub_snippet_size = math.floor((last_frame - first_frame + 1)/10)
 		rest = (last_frame - first_frame + 1) - (10*sub_snippet_size)
 		
@@ -80,45 +80,52 @@ def generate_cnnflows_of_snippet(first_frame, last_frame):
 	
 	return cnn_flows
 
-def main(args):
-	
-	bkf_file = args.name + ".bkf"
+def read_keyframes_and_fc7(kf_name, fc7_name):
+
+	bkf_file = kf_name + ".bkf"
 	bkf = open(bkf_file, "r", encoding=encode)
 	# list with key-frame numbers
 	key_frames = [int(line) for line in bkf.readlines()]
-	
 	bkf.close()
-	#print(key_frames)
 	
-	fc7_file = args.name + ".fc7"
+	fc7_file = fc7_name + ".fc7"
 	fc7 = open(fc7_file, "r", encoding=encode)
-	
 	# frames with 4096 features each
-	global frames
 	frames = fc7.readlines()
-	global levels
-	levels = args.level
+	fc7.close()
 	
-	out_file = args.name + ".cnnf"
-	output = open(out_file, "w", encoding=encode)
+	return key_frames, frames
+	
+def create_pyramid(key_frames, frames, level):
 	
 	first_frame = 1
+	cnn_flow_snippets = []
 	for i in range(len(key_frames)):
 		last_frame = key_frames[i]
-		snippet_cnn_flows = generate_cnnflows_of_snippet(first_frame, last_frame)
+		# Generates cnn flows to the snippet formed of the closed interval between first_frame and last_frame
+		cnn_flow_snippets.append(generate_cnn_flows_of_snippet(first_frame, last_frame, frames, level))
+		# Update begin of interval
 		first_frame = last_frame + 1
 
-		for j in range(len(snippet_cnn_flows)):
-			for k in range(len(snippet_cnn_flows[j])):
-				output.write(str(snippet_cnn_flows[j][k])+" ")
-			output.write("\n")
-		output.write("\n")
-		
-	output.close()
+	return cnn_flow_snippets
 	
+def write_cnn_flow(name, cnn_flow_snippets):
+
+	out_file = name + ".cnnf"
+	
+	# With automatically closes output
+	with open(out_file, "w", encoding=encode) as output:
+		# Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
+		output.write("\n\n".join(["\n".join([" ".join(list(map(str, j))) for j in i]) for i in cnn_flow_snippets]))
+	
+def main(args):
+	
+	key_frames, frames = read_keyframes_and_fc7(args.name, args.name)
+	cnn_flow_snippets = create_pyramid(key_frames, frames, args.level)
+	write_cnn_flow(args.name, cnn_flow_snippets)
 	
 	
 if __name__ == '__main__':
 	# parse arguments
-	args = getArgs()
+	args = get_Args()
 	main(args)
