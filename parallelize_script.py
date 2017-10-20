@@ -3,7 +3,6 @@ import subprocess as sp
 import argparse
 
 encode = "utf-8"
-charge_factor = 10
 threads_file = 'threads.txt'
 
 def get_Args():
@@ -11,6 +10,7 @@ def get_Args():
 	parser.add_argument("script", help="Script name to run in parallel")
 	parser.add_argument("files", help="Name of the file with the names of the input files (without extension) for the script")
 	parser.add_argument("params", help="Name of the file with the extra parameters of script")
+	parser.add_argument("-c","--charge", type=int, help="This value multiplied with number of threads avaiable indicate how many process will run between reads of the file with the number of threads")
 	return parser.parse_args()
 
 def get_threads():
@@ -45,7 +45,10 @@ def get_params(params_file):
 		print("A problem ocurred trying to read the file with the parameters: ", e)
 		return 1
 	
-def parallelize(script, files, params):
+def parallelize(script, files, params, charge_factor):
+	
+	if charge_factor == None:
+		charge_factor = 10
 	
 	names = get_files(files)
 	params = get_params(params)
@@ -78,7 +81,7 @@ def parallelize(script, files, params):
 	
 def main(args):
 	
-	parallelize(args.script, args.files, args.params)
+	parallelize(args.script, args.files, args.params, args.charge)
 	
 if __name__ == '__main__':
 	# parse arguments
