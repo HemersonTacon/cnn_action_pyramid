@@ -33,12 +33,15 @@ def write_video_frames(name, frames):
 
 	#Make a directory in the video folder with the frames
 	dir_ = 'video/' + name
-	os.makedirs(dir_, exist_ok=False)
-
-	#save frames
-	for i in range(len(frames)):
-		name_frame = dir_ + '/' + str(i) + '.png'
-		cv2.imwrite(name_frame, frames[i])
+	
+	try:
+		os.makedirs(dir_)
+		#save frames
+		for i in range(len(frames)):
+			name_frame = dir_ + '/' + str(i) + '.png'
+			cv2.imwrite(name_frame, frames[i])
+	except:
+		raise IOError("Directory can't be created or already exists: " + dir_)
 
 def main(args):
 	
