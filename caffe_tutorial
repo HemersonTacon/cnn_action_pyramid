@@ -71,7 +71,6 @@ INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include /usr/include/hdf5/serial
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/hdf5/serial 
 
 Edite essas linhas dessa forma se você esta usando o python 3.5
-
 PYTHON_LIBRARIES := boost_python-py35 python3.5m
 PYTHON_INCLUDE := /usr/include/python3.5m /usr/local/lib/python3/dist-packages/numpy/core/include  
 WITH_PYTHON_LAYER := 1  
