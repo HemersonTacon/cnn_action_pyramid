@@ -1,0 +1,45 @@
+FFmpeg9 Install
+
+1 - Remova outras versões do FFmpeg
+
+1.1 Se foi instalado via repositório oficial ubuntu
+$ sudo apt-get remove ffmpeg
+
+1.2 Se foi instalado da origem
+$ sudo make uninstall (na pasta raiz do ffmpeg)
+
+1.3 Se você não souber (Evite fazer isso, MUITO PERIGOSO)
+$ sudo find / -name "*ffmpeg*" -exec rm -i {} \;
+$ sudo ldconfig && sudo ldconfig -vp
+
+2 - Abra o diretório /opt (Pode colocar em outro diretorio)
+$ cd /opt
+
+3 - Clone o diretório do FFmpeg do git (Git tem que estar instalado)
+/opt$ sudo git clone https://github.com/FFmpeg/FFmpeg.git
+
+4 - Acesse o diretório e dê checkout na versão 2.9
+/opt$ cd FFmpeg
+/opt/FFmpeg$ sudo git checkout n2.9-dev
+
+5 - Configure
+/opt/FFmpeg$ sudo ./configure --enable-shared --disable-static
+(Se der algum erro, verifique se o yasm está instalado se não tiver instale
+sudo apt-get install yasm)
+
+6 - Make and install
+/opt/FFmpeg$ sudo make
+/opt/FFmpeg$ sudo make install
+
+7 - Acesse o /etc e atualize o arquivo ld.so.conf
+/opt/FFmpeg$ cd /etc
+/etc$ sudo nano ld.so.conf
+
+O arquivo final ficara assim:
+
+include /etc/ld.so.conf.d/*.conf
+/usr/local/lib
+ 
+
+
+
