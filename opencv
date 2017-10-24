@@ -46,7 +46,7 @@ $ cd /opt
 10 - Faça um build (Lembre-se de alterar o comando caso você tenha trocado o diretório de instalação) 
 /opt/opencv/release$ sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib/modules /opt/opencv/
 
-11 - Nesse passo acesse o outro tutorial instalação do ffmpeg9 (caso não tenha instalado)
+11 - Nesse passo acesse o outro tutorial de instalação do ffmpeg9 (caso não tenha instalado)
 
 12 - Make e Install
 /opt/opencv/release$ sudo make
