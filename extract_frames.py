@@ -32,7 +32,7 @@ def read_video(name):
 def write_video_frames(name, frames):
 	
 	#Extract name
-	name = name.split("/")[-1]
+	name = os.path.split(name)[-1]
 
 	#Make a directory in the video folder with the frames	
 	dir_ = 'video/' + name
