@@ -1,17 +1,18 @@
 import random
 import argparse
+import os
 
 encode = "utf-8"
 
 def get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-f", "--fc7", help="Creates a fc7 file", action='store_true')
-	parser.add_argument("-l", "--lsh", help="Creates a binary file", type=int)
+	parser.add_argument("-l", "--lsh", help="Creates a binary file with n bits", type=int)
 	parser.add_argument("-k", "--keyframes", help="Creates a key frames file", action='store_true')
-	parser.add_argument("-c", "--cnnflows", help="Creates a CNN flows file with the informed levels in the pyramid", type=int, choices=[1, 2, 3, 4])
-	parser.add_argument("-p", "--pca", help="Creates a CNN flows reduced by PCA file with the informed levels in the pyramid", type=int, choices=[1, 2, 3, 4])
+	parser.add_argument("-c", "--cnnflows", help="Creates a CNN flows file with n levels in the pyramid", type=int, choices=[1, 2, 3, 4])
+	parser.add_argument("-p", "--pca", help="Creates a CNN flows reduced by PCA file with n levels in the pyramid", type=int, choices=[1, 2, 3, 4])
 	parser.add_argument("-b", "--codebooks", help="Creates a codebooks file", action='store_true')
-	parser.add_argument("-d", "--descriptors", help="Creates a video descriptors file with the informed levels in the pyramid", type=int, choices=[1, 2, 3, 4])
+	parser.add_argument("-d", "--descriptors", help="Creates a video descriptors file with n levels in the pyramid", type=int, choices=[1, 2, 3, 4])
 	parser.add_argument("-n", "--name", help="Output file name")
 	parser.add_argument("-o", "--outdir", help="Output directory")
 	parser.add_argument("-s", "--seed", help="Seed of the random function", type=int)
@@ -24,7 +25,7 @@ def create_fc7_file(name, outdir):
 	maximum = 1000
 	frames = 100
 	
-	output_file = outdir + name + ".fc7"
+	output_file = os.path.join(outdir, name) + ".fc7"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(frames):
@@ -41,7 +42,7 @@ def create_lsh_file(name, outdir, num_bits=16):
 	frames = 100
 	count = 0
 	
-	output_file = outdir + name + ".lsh"
+	output_file = os.path.join(outdir, name) + ".lsh"
 	output = open(output_file, "w", encoding=encode)
 	
 	# Pick a random integer between 0 and 2 power num_bits
@@ -76,7 +77,7 @@ def create_keyframes_file(name, outdir):
 	count = 0
 	number = 0
 	
-	output_file = outdir + name + ".bkf"
+	output_file = os.path.join(outdir, name) + ".bkf"
 	output = open(output_file, "w", encoding=encode)
 	
 	number = random.randint(minimum, maximum)
@@ -104,7 +105,7 @@ def create_cnnflows_file(name, outdir, level=4):
 	else:
 		flows = 2**3 - 1 + 10
 		
-	output_file = outdir + name + ".cnnf"
+	output_file = os.path.join(outdir, name) + ".cnnf"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(snipets):
@@ -129,7 +130,7 @@ def create_pca_file(name, outdir, level=4):
 	else:
 		flows = 2**3 - 1 + 10
 		
-	output_file = outdir + name + ".pca"
+	output_file = os.path.join(outdir, name) + ".pca"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(snipets):
@@ -148,7 +149,7 @@ def create_codebooks_file(name, outdir):
 	maximum = 1000
 	size = 4000
 	
-	output_file = outdir + name + ".dic"
+	output_file = os.path.join(outdir, name) + ".dic"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(size):
@@ -165,7 +166,7 @@ def create_descriptors_file(name, outdir, level = 4):
 	maximum = 5
 	size = 4000
 	
-	output_file = outdir + name + ".desc"
+	output_file = os.path.join(outdir, name) + ".desc"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(level):
@@ -179,12 +180,18 @@ def create_descriptors_file(name, outdir, level = 4):
 	
 	
 def main(args):
+
 	no_args_flag = True
 	
 	# If ommited, args.seed gets None value and the seed uses randomness sources provided by the OS
 	random.seed(args.seed)
+	
 	if not args.outdir:
 		args.outdir = ''
+	else:
+		outdir = os.path.join(os.getcwd(), args.outdir)
+		if not os.path.isdir(outdir):
+			os.makedirs(outdir)
 	
 	if not args.name:
 		name = 'test'

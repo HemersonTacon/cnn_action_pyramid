@@ -38,12 +38,28 @@ def codify_frames(frames, num_bits):
 	
 def write_binary_frames(name, outdir, bin_frames):
 
-	out_file = outdir + name + ".lsh"
+	name = os.path.split(name)[1]
 	
-	# With automatically closes output
-	with open(out_file, "w", encoding=encode) as output:
-		# Joining frames binary coded with \n
-		output.write("\n".join(bin_frames))
+	try:
+		# Verify if is not absolute path and join the path with the current working directory
+		if not os.path.isabs(outdir):
+			outdir = os.path.join(os.getcwd(), args.outdir)
+		# If path doesn't exists, make it
+		if not os.path.isdir(outdir):
+			os.makedirs(outdir)
+				
+		out_file = os.path.join(outdir, name) + ".lsh"
+		
+		# 'with' automatically closes output
+		with open(out_file, "w", encoding=encode) as output:
+			# Joining frames binary coded with \n
+			output.write("\n".join(bin_frames))
+			
+		return 0
+		
+	except Exception as e:
+		print("Some error occurred while writing binary frames into file: ", e)
+		return 1
 	
 def main(args):
 	
