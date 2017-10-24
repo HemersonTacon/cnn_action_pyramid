@@ -3,7 +3,7 @@ import argparse
 
 encode = "utf-8"
 
-def getArgs():
+def get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-f", "--fc7", help="Creates a fc7 file", action='store_true')
 	parser.add_argument("-l", "--lsh", help="Creates a binary file", type=int)
@@ -13,16 +13,18 @@ def getArgs():
 	parser.add_argument("-b", "--codebooks", help="Creates a codebooks file", action='store_true')
 	parser.add_argument("-d", "--descriptors", help="Creates a video descriptors file with the informed levels in the pyramid", type=int, choices=[1, 2, 3, 4])
 	parser.add_argument("-n", "--name", help="Output file name")
+	parser.add_argument("-o", "--outdir", help="Output directory")
 	parser.add_argument("-s", "--seed", help="Seed of the random function", type=int)
+	parser.add_argument("-q", "--quant", help="Number of files that will be generate", type=int)
 	return parser.parse_args()
 	
 	
-def create_fc7_file(name="fc7"):
+def create_fc7_file(name, outdir):
 	minimum = 1
 	maximum = 1000
 	frames = 100
 	
-	output_file = name + ".fc7"
+	output_file = outdir + name + ".fc7"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(frames):
@@ -33,13 +35,13 @@ def create_fc7_file(name="fc7"):
 		
 	output.close()
 	
-def create_lsh_file(name="lsh", num_bits=16):
+def create_lsh_file(name, outdir, num_bits=16):
 	minimum = 1
 	maximum = 40
 	frames = 100
 	count = 0
 	
-	output_file = name + ".lsh"
+	output_file = outdir + name + ".lsh"
 	output = open(output_file, "w", encoding=encode)
 	
 	# Pick a random integer between 0 and 2 power num_bits
@@ -66,7 +68,7 @@ def create_lsh_file(name="lsh", num_bits=16):
 	output.close()
 
 	
-def create_keyframes_file(name="keyframes"):
+def create_keyframes_file(name, outdir):
 	# min and max size values of snippets
 	minimum = 20
 	maximum = 30
@@ -74,7 +76,7 @@ def create_keyframes_file(name="keyframes"):
 	count = 0
 	number = 0
 	
-	output_file = name + ".bkf"
+	output_file = outdir + name + ".bkf"
 	output = open(output_file, "w", encoding=encode)
 	
 	number = random.randint(minimum, maximum)
@@ -91,7 +93,7 @@ def create_keyframes_file(name="keyframes"):
 	output.write(str(frames)+"\n")
 	output.close()
 
-def create_cnnflows_file(name="cnnflows", level=4):
+def create_cnnflows_file(name, outdir, level=4):
 	minimum = -999
 	maximum = 999
 	flows = 1
@@ -102,7 +104,7 @@ def create_cnnflows_file(name="cnnflows", level=4):
 	else:
 		flows = 2**3 - 1 + 10
 		
-	output_file = name + ".cnnf"
+	output_file = outdir + name + ".cnnf"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(snipets):
@@ -116,7 +118,7 @@ def create_cnnflows_file(name="cnnflows", level=4):
 	output.close()
 	
 
-def create_pca_file(name="pca", level=4):
+def create_pca_file(name, outdir, level=4):
 	minimum = 1
 	maximum = 999
 	flows = 1
@@ -127,7 +129,7 @@ def create_pca_file(name="pca", level=4):
 	else:
 		flows = 2**3 - 1 + 10
 		
-	output_file = name + ".pca"
+	output_file = outdir + name + ".pca"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(snipets):
@@ -141,12 +143,12 @@ def create_pca_file(name="pca", level=4):
 	output.close()
 	
 
-def create_codebooks_file(name="codebooks"):
+def create_codebooks_file(name, outdir):
 	minimum = 1
 	maximum = 1000
 	size = 4000
 	
-	output_file = name + ".dic"
+	output_file = outdir + name + ".dic"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(size):
@@ -158,12 +160,12 @@ def create_codebooks_file(name="codebooks"):
 	output.close()
 	
 
-def create_descriptors_file(name="descriptors", level = 4):
+def create_descriptors_file(name, outdir, level = 4):
 	minimum = 0
 	maximum = 5
 	size = 4000
 	
-	output_file = name + ".desc"
+	output_file = outdir + name + ".desc"
 	output = open(output_file, "w", encoding=encode)
 	
 	for i in range(level):
@@ -181,79 +183,63 @@ def main(args):
 	
 	# If ommited, args.seed gets None value and the seed uses randomness sources provided by the OS
 	random.seed(args.seed)
+	if not args.outdir:
+		args.outdir = ''
 	
-	
-	if args.fc7:
-		if args.name:
-			create_fc7_file(args.name)
-		else:
-			create_fc7_file()
-		no_args_flag = False
+	if not args.name:
+		name = 'test'
+		args.name = name
+	else:
+		name = args.name
 		
-	if args.lsh:
-		if args.name:
-			create_lsh_file(args.name, args.lsh)
-		else:
-			create_lsh_file()
-		no_args_flag = False
+	if not args.quant:
+		args.quant = 1
 		
-	if args.keyframes:
-		if args.name:
-			create_keyframes_file(args.name)
-		else:
-			create_keyframes_file()
-		no_args_flag = False
-	
-	if args.cnnflows:
-		if args.name:
-			create_cnnflows_file(args.name)
-		else:
-			create_cnnflows_file(level=args.cnnflows)
-		no_args_flag = False
-	
-	if args.pca:
-		if args.name:
-			create_pca_file(args.name)
-		else:
-			create_pca_file(level=args.pca)
-		no_args_flag = False
-	
-	if args.codebooks:
-		if args.name:
-			create_codebooks_file(args.name)
-		else:
-			create_codebooks_file()
-		no_args_flag = False
-	
-	if args.descriptors:
-		if args.name:
-			create_descriptors_file(args.name)
-		else:
-			create_descriptors_file(level=args.descriptors)
-		no_args_flag = False
-	
-	if no_args_flag:
-		if args.name:
-			create_fc7_file(args.name)
-			create_lsh_file(args.name, args.lsh)
-			create_keyframes_file(args.name)
-			create_cnnflows_file(args.name)
-			create_pca_file(args.name)
-			create_codebooks_file(args.name)
-			create_descriptors_file(args.name)
-		else:
-			create_fc7_file()
-			create_lsh_file()
-			create_keyframes_file()
-			create_cnnflows_file()
-			create_pca_file()
-			create_codebooks_file()
-			create_descriptors_file()
+	for i in range(args.quant):
+		
+		if args.fc7:
+			create_fc7_file(name, args.outdir)
+			no_args_flag = False
+			
+		if args.lsh:
+			create_lsh_file(name, args.outdir, args.lsh)
+			no_args_flag = False
+			
+		if args.keyframes:
+			create_keyframes_file(name, args.outdir)
+			no_args_flag = False
+		
+		if args.cnnflows:
+			create_cnnflows_file(name, args.outdir, args.cnnflows)
+			no_args_flag = False
+		
+		if args.pca:
+			create_pca_file(name, args.outdir, args.pca)
+			no_args_flag = False
+		
+		if args.codebooks:
+			create_codebooks_file(name, args.outdir)
+			no_args_flag = False
+		
+		if args.descriptors:
+			create_descriptors_file(name, args.outdir, args.descriptors)
+			no_args_flag = False
+		
+		if no_args_flag:
+			create_fc7_file(name, args.outdir)
+			create_lsh_file(name , args.outdir)
+			create_keyframes_file(name, args.outdir)
+			create_cnnflows_file(name, args.outdir)
+			create_pca_file(name, args.outdir)
+			create_codebooks_file(name, args.outdir)
+			create_descriptors_file(name, args.outdir)
+		
+		name = args.name + str(i)
 
 		
 if __name__ == '__main__':
 	# parse arguments
-	args = getArgs()
+	args = get_Args()
 	main(args)
 	
 	
