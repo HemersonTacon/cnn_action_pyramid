@@ -105,13 +105,17 @@ set(${CMAKE_CXX_FLAGS} "-D_FORCE_INLINES ${CMAKE_CXX_FLAGS}")
 make all
 make test
 make runtest
-make pycaffe      -should be finished already, so you can omit this one
+make pycaffe   
 make distribute
 
 Se você tiver problemas com caffe.proto
 $ protoc src/caffe/proto/caffe.proto --cpp_out=.
 $ mkdir include/caffe/proto
 $ mv src/caffe/proto/caffe.pb.h include/caffe/proto
+
+16 - Exporte o path do caffe, editando o arquivo ~/.bashrc e adicionando
+export PYTHONPATH=/path/to/caffe-master/python:$PYTHONPATH
+
 
 
 
