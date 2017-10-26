@@ -64,12 +64,10 @@ def parallelize(script, files, params, charge_factor):
 		configurations = []
 		
 		for i in range(executions_interval):
-			print("Params: ", params)
 			command = list(params)
 			command.insert(0, names[executions])
 			command.insert(0, script)
 			command.insert(0, 'python')
-			print("Command: ", command)
 			configurations.append(command)
 			executions = executions + 1
 			
