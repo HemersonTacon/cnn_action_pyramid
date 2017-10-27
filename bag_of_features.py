@@ -12,7 +12,7 @@ def get_Args():
 	parser.add_argument("dir", help="Directory of dataset reduced by pca")
 	parser.add_argument("size", type=int, help="Size of codebook")
 	parser.add_argument("-o", "--outdir", help="Output directory")
-	parser.add_argument("-s", "--savecodes", help="If present the codebooks will be saved in disk", action = 'store_true')
+	parser.add_argument("-s", "--savecodes", help="If present the codebooks will be saved in disk")
 	parser.add_argument("-i", "--iterations", help="Number of iterations of kmeans algorithm")
 	return parser.parse_args()
 	
@@ -46,7 +46,7 @@ def main(args):
 		args.outdir = ''
 	
 	if args.savecodes:
-		write_codebooks(args.outdir, codebooks)
+		write_codebooks(args.savecodes, args.outdir, codebooks)
 	
 	codebooks = [codebook.tolist() for codebook in codebooks]
 	
