@@ -140,7 +140,7 @@ def main(args):
 	
 	pca_videos = read_pca(args.dir)
 	if not args.iterations:
-		args.iterations = 1000
+		args.iterations = 20
 	codebooks = create_codebooks(pca_videos, args.size, args.iterations)
 	if not args.outdir:
 		args.outdir = ''
