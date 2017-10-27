@@ -13,7 +13,7 @@ def get_Args():
 	parser.add_argument("size", type=int, help="Size of codebook")
 	parser.add_argument("-n", "--name", help="Codebook file name")
 	parser.add_argument("-o", "--outdir", help="Output directory")
-	parser.add_argument("-i", "--iterations", help="Number of iterations of kmeans algorithm")
+	parser.add_argument("-i", "--iterations", type=int, help="Number of iterations of kmeans algorithm")
 	return parser.parse_args()
 
 def read_pca(dir):
