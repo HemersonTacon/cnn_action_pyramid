@@ -2,16 +2,17 @@ import argparse
 import cv2
 import numpy as np
 import os
-from scipy.cluster.vq import kmeans, vq
+from scipy.cluster.vq import kmeans2, vq
+from sklearn import metrics, cluster
 
 encode = "utf-8"
-iter = 1
 
 def get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("dir", help="Directory of dataset reduced by pca")
 	parser.add_argument("size", type=int, help="Size of codebook")
 	parser.add_argument("-o", "--outdir", help="Output directory")
+	parser.add_argument("-i", "--iterations", help="Number of iterations of kmeans algorithm")
 	return parser.parse_args()
 
 def read_pca(dir):
@@ -72,7 +73,7 @@ def get_interval_by_level(n):
 		return 0,0
 		
 	
-def create_codebooks(pca_videos, size):
+def create_codebooks(pca_videos, size, iter):
 	
 	print("Shape: ", pca_videos.shape)
 	num_videos  = pca_videos.shape[0]
@@ -98,16 +99,21 @@ def create_codebooks(pca_videos, size):
 					# Empilho os descritores referentes ao nivel atual
 					descriptors = np.vstack((descriptors, descriptor[begin:end]))
 		# Rodo o kmeans pra um nivel
-		voc, variance = kmeans(descriptors, size, iter)
-		codebooks.append(voc)
+		# Em ordem os parâmetros passados são: dados, numero de clusters, 
+		#model = cluster.KMeans(n_clusters=size, max_iter=iter).fit(descriptors)
+		centroids, labels = kmeans2(descriptors, size, iter, minit='random', missing='warn')
+		#voc, variance = kmeans(descriptors, size, iter)
+		#labels = model.labels_
+		#centroids = model.cluster_centers_
+		codebooks.append(centroids)
+		score = metrics.silhouette_score(descriptors, labels, metric='euclidean')
+		print("Silhouette coefficient of codebook ",i,": ", score)
 
 	return codebooks
 	
 def write_codebooks(outdir, codebooks):
 
 	name = "codebook"
-	
-	print("Shape: ", len(codebooks))
 	
 	try:	
 		# If path doesn't exists, make it
@@ -119,7 +125,7 @@ def write_codebooks(outdir, codebooks):
 	
 			# With automatically closes output
 			with open(out_file, "w", encoding=encode) as output:
-				# Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
+				# Casting np.array to list then cast elements to str, join them with space and finally join rows with \n
 				output.write("\n".join([" ".join(list(map(str, line))) for line in codebooks[i].tolist()]))
 			
 		return 0
@@ -131,9 +137,12 @@ def write_codebooks(outdir, codebooks):
 def main(args):
 	
 	pca_videos = read_pca(args.dir)
-	codebooks = create_codebooks(pca_videos, args.size)
+	if not args.iterations:
+		args.iterations = 1000
+	codebooks = create_codebooks(pca_videos, args.size, args.iterations)
 	if not args.outdir:
 		args.outdir = ''
+	
 	write_codebooks(args.outdir, codebooks)
 	
 	
