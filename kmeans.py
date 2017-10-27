@@ -84,20 +84,23 @@ def create_codebooks(pca_videos, size, iter):
 	
 	# Para cada level
 	for i in range(num_levels):
-		# Inicializo o empilhamento de descritores
-		descriptors = np.array(pca_videos[0][0][0])
+		# Descubro as linhas que correspondem ao nivel atual
+		begin, end = get_interval_by_level(i)
+		# Inicializo o empilhamento de descritores para esse nivel
+		descriptors = np.array(pca_videos[0][0][begin:end])
 		# Para cada video
 		for j in range(num_videos):
 			# Para cada snippet do video
 			for k in range(len(pca_videos[j])):
-				# Se nao for aquele primeiro que ja empilhei na inicializacao
-				if not (j == 0 and k == 0 and i == 0):
-					# Tranformo o snippet inteiro em um np.array
-					descriptor = np.array(pca_videos[j][k])
-					# Descubro as linhas que correspondem ao nivel atual
-					begin, end = get_interval_by_level(i)
-					# Empilho os descritores referentes ao nivel atual
-					descriptors = np.vstack((descriptors, descriptor[begin:end]))
+				'''
+				Se nao for aquele primeiro que ja empilhei na inicializacao, ou seja, 
+				primeiro video (j==0) e primeiro snippet (k==0)
+				'''
+				if not (j == 0 and k == 0):
+					# Transformo os descritores para esse nivel em um np.array
+					descriptor = np.array(pca_videos[j][k][begin:end])
+					# Empilho os descritores
+					descriptors = np.vstack((descriptors, descriptor))
 		# Rodo o kmeans pra um nivel
 		# Em ordem os parâmetros passados são: dados, numero de clusters, 
 		#model = cluster.KMeans(n_clusters=size, max_iter=iter).fit(descriptors)
