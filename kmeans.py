@@ -2,7 +2,7 @@ import argparse
 import cv2
 import numpy as np
 import os
-from scipy.cluster.vq import kmeans2, vq
+from scipy.cluster.vq import kmeans2
 from sklearn import metrics, cluster
 
 encode = "utf-8"
@@ -11,6 +11,7 @@ def get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("dir", help="Directory of dataset reduced by pca")
 	parser.add_argument("size", type=int, help="Size of codebook")
+	parser.add_argument("-n", "--name", help="Codebook file name")
 	parser.add_argument("-o", "--outdir", help="Output directory")
 	parser.add_argument("-i", "--iterations", help="Number of iterations of kmeans algorithm")
 	return parser.parse_args()
@@ -33,7 +34,7 @@ def read_pca(dir):
 				del pca_features[-1]
 				videos.append(pca_features)
 		
-		return np.array(videos)
+		return videos
 		
 	except Exception as e:
 		print("A problem occurred trying to read pca file: ", e)
@@ -75,8 +76,7 @@ def get_interval_by_level(n):
 	
 def create_codebooks(pca_videos, size, iter):
 	
-	print("Shape: ", pca_videos.shape)
-	num_videos  = pca_videos.shape[0]
+	num_videos  = len(pca_videos)
 	num_snip_feat = len(pca_videos[0][0])
 	num_levels = get_levels(num_snip_feat)
 	
@@ -114,9 +114,8 @@ def create_codebooks(pca_videos, size, iter):
 
 	return codebooks
 	
-def write_codebooks(outdir, codebooks):
+def write_codebooks(name, outdir, codebooks):
 
-	name = "codebook"
 	
 	try:	
 		# If path doesn't exists, make it
@@ -145,8 +144,10 @@ def main(args):
 	codebooks = create_codebooks(pca_videos, args.size, args.iterations)
 	if not args.outdir:
 		args.outdir = ''
+	if not args.name:
+		args.name = "codebook"
 	
-	write_codebooks(args.outdir, codebooks)
+	write_codebooks(args.name, args.outdir, codebooks)
 	
 	
 if __name__ == '__main__':
