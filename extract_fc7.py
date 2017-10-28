@@ -71,22 +71,23 @@ def extract_features(params, input_):
 	#Instatiate Extractor class
 	extractor = Extractor(model_def, pretrained_model, image_dims=image_dims, mean=mean, input_scale=input_scale, raw_scale=raw_scale, channel_swap=channel_swap, layer=layer)
 	output = extractor.extract(input_)
-	return output
+	return output,layer
 
 
 def write_features(name, features, layer):
 
 	out_file = name + "." + layer
 	df = pd.DataFrame(features)
-	df.to_csv(out_file, sep=' ', line_terminator='\n', encoding=encode, header=None, index=False)
+	df.to_csv(out_file, sep=',', line_terminator='\n', encoding=encode, header=None, index=False)
 
 def main(args):
 	
 	initialize_dnn(args.gpu)
 	params = get_params_dnn(args.file)
 	preprocess_params(params)
-	features = extract_features(params, args.input)
-	write_features('teste', features, 'fc7')
+	features,layer = extract_features(params, args.input)
+	name = args.input.split(os.path.sep)[-2]
+	write_features(name, features, layer)
 
 if __name__ == '__main__':
 	# parse arguments
