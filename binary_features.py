@@ -3,7 +3,7 @@ import argparse
 
 encode = "utf-8"
 
-def get_Args():
+def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("name", help="Input file")
 	parser.add_argument("bits", type=int, help="Number of bits of codification")
@@ -61,7 +61,7 @@ def write_binary_frames(name, outdir, bin_frames):
 		print("Some error occurred while writing binary frames into file: ", e)
 		return 1
 	
-def main(args):
+def _main(args):
 	
 	frames = read_fc7_file(args.name)
 	binary_frames = codify_frames(frames, args.bits)
