@@ -3,7 +3,7 @@ import math
 
 encode = "utf-8"
 
-def get_Args():
+def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("name", help="Input file")
 	parser.add_argument("level", type=int, help="Number of pyramid levels", choices=[1, 2, 3, 4])
@@ -140,7 +140,7 @@ def write_cnn_flow(name, outdir, cnn_flow_snippets):
 		print("Some error occurred while writing cnnflow pyramid into file: ", e)
 		return 1
 	
-def main(args):
+def _main(args):
 	
 	key_frames, frames = read_keyframes_and_fc7(args.name, args.name)
 	cnn_flow_snippets = create_pyramid(key_frames, frames, args.level)
@@ -151,5 +151,5 @@ def main(args):
 	
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
