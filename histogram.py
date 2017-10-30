@@ -6,7 +6,7 @@ from scipy.cluster.vq import kmeans2, vq
 
 encode = "utf-8"
 
-def get_Args():
+def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("name", help="Video file name reduced by pca")
 	parser.add_argument("codedir", help="Directory of codebooks")
@@ -142,7 +142,7 @@ def write_histograms(name, outdir, histograms):
 		print("Some error occurred while writing histogram into file: ", e)
 		return 1
 	
-def main(args):
+def _main(args):
 	
 	pca = read_pca(args.name)
 	codebooks = read_codebooks(args.codedir)
@@ -155,5 +155,5 @@ def main(args):
 	
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
