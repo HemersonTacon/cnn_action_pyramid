@@ -3,7 +3,7 @@ import math
 
 encode = "utf-8"
 
-def get_Args():
+def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("name", help="Input file")
 	parser.add_argument("-o", "--outdir", help="Output directory")
@@ -108,7 +108,7 @@ def write_key_frames(name, outdir, key_frames):
 		print("Some error occurred while writing keyframes into file: ", e)
 		return 1
 	
-def main(args):
+def _main(args):
 	
 	frames = read_lsh_file(args.name)
 	key_frames = calculate_key_frames(frames, 1)
@@ -118,5 +118,5 @@ def main(args):
 	
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
