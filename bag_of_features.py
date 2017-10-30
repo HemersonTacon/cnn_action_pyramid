@@ -7,7 +7,7 @@ from histogram import create_histograms, write_histograms
 
 encode = "utf-8"
 
-def get_Args():
+def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("dir", help="Directory of dataset reduced by pca")
 	parser.add_argument("size", type=int, help="Size of codebook")
@@ -58,5 +58,5 @@ def _main(args):
 	
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
