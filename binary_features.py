@@ -71,8 +71,8 @@ def _main(args):
 	
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
 
 
 	
