@@ -15,7 +15,7 @@ encode = 'utf-8'
 num_params = 8 #num params in input param file
 
 
-def get_Args():
+def _get_Args():
 	
 	parser = argparse.ArgumentParser()
 	parser.add_argument("input", help = "Input folder with frames")
@@ -80,7 +80,7 @@ def write_features(name, features, layer):
 	df = pd.DataFrame(features)
 	df.to_csv(out_file, sep=',', line_terminator='\n', encoding=encode, header=None, index=False)
 
-def main(args):
+def _main(args):
 	
 	initialize_dnn(args.gpu)
 	params = get_params_dnn(args.file)
@@ -91,6 +91,6 @@ def main(args):
 
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
 
