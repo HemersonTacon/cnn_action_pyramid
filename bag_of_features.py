@@ -33,7 +33,7 @@ def write_all_histograms(dir, histograms_videos, outdir):
 	for name, histograms in zip(names, histograms_videos):
 		write_histograms(name, outdir, histograms)
 		
-def main(args):
+def _main(args):
 
 	pca_videos = read_pca(args.dir)
 	
