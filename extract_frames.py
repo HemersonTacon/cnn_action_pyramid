@@ -5,7 +5,7 @@ import os
 
 encode = "utf-8"
 
-def get_Args():
+def _get_Args():
 
         parser = argparse.ArgumentParser()
         parser.add_argument("video", action='store', type=str, help="Video path", default='list')
@@ -45,13 +45,13 @@ def write_video_frames(name, frames):
 	except:
 		raise IOError("Directory can't be created or already exists: " + dir_)
 
-def main(args):
+def _main(args):
 	
 	frames = read_video(args.video)
 	write_video_frames(args.video,frames)
 
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
 	
