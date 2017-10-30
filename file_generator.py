@@ -4,7 +4,7 @@ import os
 
 encode = "utf-8"
 
-def get_Args():
+def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-f", "--fc7", help="Creates a fc7 file", action='store_true')
 	parser.add_argument("-l", "--lsh", help="Creates a binary file with n bits", type=int)
@@ -179,7 +179,7 @@ def create_descriptors_file(name, outdir, level = 4):
 	return
 	
 	
-def main(args):
+def _main(args):
 
 	no_args_flag = True
 	
@@ -246,8 +246,8 @@ def main(args):
 		
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
 	
 	
 
