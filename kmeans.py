@@ -7,7 +7,7 @@ from sklearn import metrics, cluster
 
 encode = "utf-8"
 
-def get_Args():
+def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("dir", help="Directory of dataset reduced by pca")
 	parser.add_argument("size", type=int, help="Size of codebook")
@@ -136,7 +136,7 @@ def write_codebooks(name, outdir, codebooks):
 		print("Some error occurred while writing codebook into file: ", e)
 		return 1
 	
-def main(args):
+def _main(args):
 	
 	pca_videos = read_pca(args.dir)
 	if not args.iterations:
@@ -152,5 +152,5 @@ def main(args):
 	
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
