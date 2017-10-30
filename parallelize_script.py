@@ -5,7 +5,7 @@ import argparse
 encode = "utf-8"
 threads_file = 'threads.txt'
 
-def get_Args():
+def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("script", help="Script name to run in parallel")
 	parser.add_argument("files", help="Name of the file with the names of the input files (without extension) for the script")
@@ -77,11 +77,11 @@ def parallelize(script, files, params, charge_factor):
 		
 		
 	
-def main(args):
+def _main(args):
 	
 	parallelize(args.script, args.files, args.params, args.charge)
 	
 if __name__ == '__main__':
 	# parse arguments
-	args = get_Args()
-	main(args)
+	args = _get_Args()
+	_main(args)
