@@ -97,24 +97,23 @@ def create_keyframes_file(name, outdir):
 def create_cnnflows_file(name, outdir, level=4):
 	minimum = -999
 	maximum = 999
-	flows = 1
 	snipets = 4;
 	
-	if level < 4:
-		flows = 2**level - 1
-	else:
-		flows = 2**3 - 1 + 10
-		
-	output_file = os.path.join(outdir, name) + ".cnnf"
-	output = open(output_file, "w", encoding=encode)
 	
-	for i in range(snipets):
-		for j in range(flows):
-			for k in range(4096):
-				cnnf = random.uniform(minimum, maximum)
-				output.write(str(cnnf)+" ")
+	for h in range(level):
+		if h < 3:
+			flows = 2**h
+		else:
+			flows = 10
+		output_file = os.path.join(outdir, name) + str(h) + ".cnnf"
+		output = open(output_file, "w", encoding=encode)
+		for i in range(snipets):
+			for j in range(flows):
+				for k in range(4096):
+					cnnf = random.uniform(minimum, maximum)
+					output.write(str(cnnf)+" ")
+				output.write("\n")
 			output.write("\n")
-		output.write("\n")
 		
 	output.close()
 	
@@ -189,9 +188,8 @@ def _main(args):
 	if not args.outdir:
 		args.outdir = ''
 	else:
-		outdir = os.path.join(os.getcwd(), args.outdir)
-		if not os.path.isdir(outdir):
-			os.makedirs(outdir)
+		if not os.path.isdir(args.outdir):
+			os.makedirs(args.outdir)
 	
 	if not args.name:
 		name = 'test'
