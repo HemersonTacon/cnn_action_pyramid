@@ -54,19 +54,19 @@ def write_pca_reduction(name, cnn_flow_PCA, outdir):
      if not os.path.isdir(outdir) and outdir !='':
 	            os.makedirs(outdir)
 				
-     out_file = os.path.join(outdir, os.path.splitext(name)[0] + ".pca")
+     out_file = os.path.join(outdir, os.path.splitext(os.path.split(name)[1])[0] + ".pca")
      # With automatically closes output
      with open(out_file, "w", encoding=encode) as output:
 	  # Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
                output.write("\n".join([" ".join(list(map(str,i))) for i in cnn_flow_PCA]))
 
 
-def write_pca_baseground(name, baseground_PCA, outdir):
+def write_pca_baseground(tipo, name, baseground_PCA, outdir):
      
      if not os.path.isdir(outdir) and outdir !='':
 	            os.makedirs(outdir)
 				
-     out_file = os.path.join(outdir, os.path.splitext(name)[0] + ".pcab")
+     out_file = os.path.join(outdir, os.path.splitext(os.path.split(name)[1])[0] + "_" + tipo + ".pcab")
      # With automatically closes output
      with open(out_file, "w", encoding=encode) as output:
 	  # Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
