@@ -21,10 +21,10 @@ def read_cnnf_file(name):
 
 def baseground_PCA(vetor_para_PCA, numero_de_features_apos_PCA):
      
-     print("\ncomputando os autovetores e o vetor de media... pode demorar...")
+     #print("\ncomputando os autovetores e o vetor de media... pode demorar...")
      #print("O numero de features apos PCA e de: " + str(numero_de_features_apos_PCA))
      media, autoVetores = cv.PCACompute(vetor_para_PCA, None , None, int(numero_de_features_apos_PCA))
-     print('\nautovetores e media obtidos com sucesso!')
+     #print('\nautovetores e media obtidos com sucesso!')
      return autoVetores, media
 
 def padrao_PCA(entrada):
@@ -54,7 +54,7 @@ def write_pca_reduction(name, cnn_flow_PCA, outdir):
      if not os.path.isdir(outdir) and outdir !='':
 	            os.makedirs(outdir)
 				
-     out_file = os.path.join(outdir, name + ".pca")
+     out_file = os.path.join(outdir, os.path.splitext(name)[0] + ".pca")
      # With automatically closes output
      with open(out_file, "w", encoding=encode) as output:
 	  # Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
@@ -66,7 +66,7 @@ def write_pca_baseground(name, baseground_PCA, outdir):
      if not os.path.isdir(outdir) and outdir !='':
 	            os.makedirs(outdir)
 				
-     out_file = os.path.join(outdir, name + ".pcab")
+     out_file = os.path.join(outdir, os.path.splitext(name)[0] + ".pcab")
      # With automatically closes output
      with open(out_file, "w", encoding=encode) as output:
 	  # Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
