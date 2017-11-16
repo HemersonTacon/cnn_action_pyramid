@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+import os
 
 global numero_de_features_antes_do_PCA
 global numero_de_features_apos_PCA  
@@ -11,7 +12,7 @@ encode = "utf-8"
 
 
 def read_cnnf_file(name):
-     cnnf_file = name + ".cnnf"
+     cnnf_file = name
      cnnf = open(cnnf_file, "r")
      cnnFlows = cnnf.readlines()
      cnnf.close()
@@ -48,18 +49,24 @@ def erro_medio_de_projecao(vetor_para_PCA,back_projecao):
      erro_quadratico_medio = np.mean(np.power(erro,2))
      return erro_quadratico_medio
     	
-def write_pca_reduction(name, cnn_flow_PCA):
-
-     out_file = name + ".pca"
+def write_pca_reduction(name, cnn_flow_PCA, outdir):
+	
+     if not os.path.isdir(outdir) and outdir !='':
+	            os.makedirs(outdir)
+				
+     out_file = os.path.join(outdir, name + ".pca")
      # With automatically closes output
      with open(out_file, "w", encoding=encode) as output:
 	  # Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
                output.write("\n".join([" ".join(list(map(str,i))) for i in cnn_flow_PCA]))
 
 
-def write_pca_baseground(name, baseground_PCA):
-
-     out_file = name + ".pcab"	
+def write_pca_baseground(name, baseground_PCA, outdir):
+     
+     if not os.path.isdir(outdir) and outdir !='':
+	            os.makedirs(outdir)
+				
+     out_file = os.path.join(outdir, name + ".pcab")
      # With automatically closes output
      with open(out_file, "w", encoding=encode) as output:
 	  # Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
@@ -109,7 +116,7 @@ def conformar_cnn_flow_para_PCA(vetor_para_PCA):
 
      return vetor_para_PCA
 
-def main():
+def _main():
      global numero_de_features_antes_do_PCA
      global numero_de_features_apos_PCA
      cnn_flow = read_cnnf_file("test0")
@@ -145,4 +152,4 @@ def main():
 
      
 if __name__ == '__main__':
-     main()
+     _main()
