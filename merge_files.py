@@ -63,13 +63,15 @@ def concat_desc():
           if esta_contido:
                files_name = files_name.split('.avi3.desc')[0]
           files_name = files_name + '.fvec'
-          saveDescriptor(files_name, new_descriptor_np)
+          saveDescriptor(files_name, new_descriptor_np)#invoking method from descrFVEC, which automatically write the file
 
-          '''file = open(outdir + files_name + '.fvec',"wb") # gravar no diretorio de saida com os nomes dos arquivos
+          '''
+          file = open(outdir + files_name + '.fvec',"wb") # gravar no diretorio de saida com os nomes dos arquivos
           for i in range(new_descriptor_np.shape[1]): 
                to_write = bytes([new_descriptor[i]])
                file.write(to_write)
-          file.close()'''
+          file.close()
+          '''
           del new_descriptor
      
 def _main():
