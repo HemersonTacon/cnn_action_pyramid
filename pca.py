@@ -5,26 +5,18 @@ import os
 global numero_de_features_antes_do_PCA
 global numero_de_features_apos_PCA  
 
-
-
-
 encode = "utf-8"
 
-
-def read_cnnf_file(name):
+def read_file(name):
      cnnf_file = name
      cnnf = open(cnnf_file, "r")
      cnnFlows = cnnf.readlines()
      cnnf.close()
      return cnnFlows
 
-
 def baseground_PCA(vetor_para_PCA, numero_de_features_apos_PCA):
      
-     #print("\ncomputando os autovetores e o vetor de media... pode demorar...")
-     #print("O numero de features apos PCA e de: " + str(numero_de_features_apos_PCA))
      media, autoVetores = cv.PCACompute(vetor_para_PCA, None , None, int(numero_de_features_apos_PCA))
-     #print('\nautovetores e media obtidos com sucesso!')
      return autoVetores, media
 
 def padrao_PCA(entrada):
@@ -72,9 +64,8 @@ def write_pca_baseground(tipo, name, baseground_PCA, outdir):
 	  # Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
                output.write("\n".join([" ".join(list(map(str,i))) for i in baseground_PCA]))
 
-
-     
-def cnn_flow_para_PCA(cnn_flow):
+#returns a np array version of cnnf files, with no empty lines between differente cnn flows
+def file2PCA(cnn_flow): 
      global numero_de_features_antes_do_PCA
      global numero_de_features_apos_PCA
      numero_de_features_apos_PCA = 100
@@ -84,9 +75,8 @@ def cnn_flow_para_PCA(cnn_flow):
      
      for i in range(len(cnn_flow)):
 
-          cnnFlowsSplit = cnn_flow[i].split( )
+          cnnFlowsSplit = cnn_flow[i].split( )    
           if cnnFlowsSplit == []:
-
                continue
           contador = contador + 1
           cnnFlowsSplitFloat.append([]) # gerando um novo no para a lista
@@ -102,7 +92,7 @@ def cnn_flow_para_PCA(cnn_flow):
      return vetor_para_PCA
 
 'se tiver menos cNN Flows que features, copiar os videos até ter mais videos que CNN flows'
-def conformar_cnn_flow_para_PCA(vetor_para_PCA):
+def conform2PCA(vetor_para_PCA):
 
      vetor_para_PCA_fixo = np.copy(vetor_para_PCA)
      folga = 5
@@ -119,37 +109,21 @@ def conformar_cnn_flow_para_PCA(vetor_para_PCA):
 def _main():
      global numero_de_features_antes_do_PCA
      global numero_de_features_apos_PCA
-     cnn_flow = read_cnnf_file("test0")
+     cnn_flow = read_file("test0")
      print('O tipo do arquivo lido do cnnflow é:' + str(type(cnn_flow)))
-     
-     vetor_para_PCA = cnn_flow_para_PCA(cnn_flow)
+     vetor_para_PCA = file2PCA(cnn_flow)
      print('o numero de samples é: ' + str(len(vetor_para_PCA)))
-     #print('A dimensao do cnn_flow convertido é de ' + str(len(vetor_para_PCA)) + 'linhas e ' + str(len(vetor_para_PCA[0])) + ' colunas e uma terceira dimensao de tamanho: ')
-     vetor_para_PCA = conformar_cnn_flow_para_PCA(vetor_para_PCA)
+     vetor_para_PCA = conform2PCA(vetor_para_PCA)
      print('A dimensao do cnn_flow conformado  é de ' + str(len(vetor_para_PCA)) + 'linhas e ' + str(len(vetor_para_PCA[0])) + ' colunas e uma terceira dimensao de tamanho: ')# + str(len(vetor_para_PCA[0][0]))   )
-     #print(vetor_para_PCA.shape)
-     #print(len(vetor_para_PCA))
-     #print(len(vetor_para_PCA[0]))
-     #print("Numero de features antes do PCA: " + str(numero_de_features_antes_do_PCA))
-     #print("Numero de features apos o PCA: " + str(numero_de_features_apos_PCA))
-
      auto_vetores, media = baseground_PCA(vetor_para_PCA,numero_de_features_apos_PCA)
      print('A dimensao de auto_vetores  é de ' + str(len(auto_vetores)) + ' linhas e ' + str(len(auto_vetores[0])) + 'colunas' )
-     #print("baseground obtido!")
      write_pca_baseground("autovetores", auto_vetores)
      write_pca_baseground("vetor_media", media)
-     #print('a dimensao de uma linha e de: ' + str(len(vetor_para_PCA[0])))
-     #print(vetor_para_PCA[0])
-     
-     
      projecao = projecao_PCA(vetor_para_PCA[0:1][:], media, auto_vetores)
-     #projecao = cv.PCAProject(vetor_para_PCA[], media, auto_vetores)
-     #print(projecao)
      print(str(projecao.shape))
      write_pca_reduction('teste_projecao',projecao)
      back_projecao = back_projecao_PCA(projecao, media, auto_vetores)
     # erro_quadratico_medio = erro_medio_de_projecao(vetor_para_PCA,back_projecao)
 
-     
 if __name__ == '__main__':
      _main()
