@@ -26,6 +26,7 @@ def _get_Args():
      parser.add_argument("path", help="path containing all the descriptors folders")
      parser.add_argument("level",help="folder's name level")
      parser.add_argument("class1", help="read class 1")
+     parser.add_argument("group" , help="tag to identify if belong to the training, validation or test set")
      parser.add_argument("--class2","-c2", help="read class 2")
      parser.add_argument("--class3","-c3", help="read class 3")
      parser.add_argument("--class4","-c4", help="read class 4")
@@ -105,8 +106,8 @@ def _main(args):
      eigenVectors, mean = pca.baseground_PCA(cnnFlow_conformed,n_features_after_PCA)
      print('Done!') 
      print(eigenVectors.shape)
-     pca.write_pca_baseground('mean',args.level, mean, args.path)
-     pca.write_pca_baseground('eigenVectors',args.level, eigenVectors, args.path)
+     pca.write_pca_baseground('mean_' + args.group, args.level, mean, args.path)
+     pca.write_pca_baseground('eigenVectors_' + args.group, args.level, eigenVectors, args.path)
      
 
 if __name__ == '__main__':
