@@ -1,3 +1,7 @@
+'''
+This file contains a method to merge all level descriptors in one single file.
+'''
+
 import cv2 as cv
 import numpy as np
 import pca
@@ -26,12 +30,6 @@ def read_desc_file(name):
      desc.close()
      return descriptor
 
-
-     
-
-
-
-
 def concat_desc():
      path = args.path
      outdir = args.outdir
@@ -41,7 +39,6 @@ def concat_desc():
      level.append(args.level_1)
      level.append(args.level_2)
      level.append(args.level_3)
-     
      
 
      for j in range(4): # um laço para cada nivel para obter o caminhos para as pastas de cada nivel
@@ -69,19 +66,12 @@ def concat_desc():
           saveDescriptor(files_name, new_descriptor_np)
 
           '''file = open(outdir + files_name + '.fvec',"wb") # gravar no diretorio de saida com os nomes dos arquivos
-
           for i in range(new_descriptor_np.shape[1]): 
-
-
                to_write = bytes([new_descriptor[i]])
                file.write(to_write)
-
           file.close()'''
-
           del new_descriptor
      
-
-          
 def _main():
      concat_desc()
 
