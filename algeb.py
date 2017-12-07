@@ -8,7 +8,7 @@ Saída: np.array
 '''
 def normalizar(lst):
 	lista = list(map(float, lst))
-	print(lista)
+	#print(lista)
 	lista = np.array(lista)
 	lista = lista.reshape(1,lista.shape[0])
 	modulo = np.power(np.sum(np.power(lista,2)),0.5)
