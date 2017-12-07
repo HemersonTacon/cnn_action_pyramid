@@ -1,6 +1,11 @@
 import numpy as np
 import math
 
+'''
+normalizar: recebe uma lista como parâmetro de entrada e retorna essa mesma lista normalizada pela l2. 
+Entrada: list
+Saída: np.array
+'''
 def normalizar(lst):
 	lista = list(map(float, lst))
 	print(lista)
