@@ -5,7 +5,7 @@ import os
 
 '''
 ###########################
-norma_estatistica_gcg
+norma_estatistica_padrao
 input: vetor, vetor_medio da base(vetor), desvio padrão da norma dos vetores na base analisada(escalar)
 output: vetor normalizado
 
@@ -32,9 +32,9 @@ número de desvios para o range de normalizacao ( será o mesmo valor para todos
 output: vetor normalizado
 '''
 
-def norma_max_min(vetor,max,min):
-	range = max - min
-	vetor_normalizado = (vetor - min) /range
+def norma_max_min(vetor,maxk,mink):
+	rangek = maxk - mink
+	vetor_normalizado = (vetor - mink) /rangek
 	return vetor_normalizado
 	
 def norma_estatistica_padrao(vetor, vetor_medio, desvio_da_norma ):
@@ -43,15 +43,15 @@ def norma_estatistica_padrao(vetor, vetor_medio, desvio_da_norma ):
 
 
 def norma_estatistica_global(vetor, media, vetor_desvio, nDesvios):
-	range = 2*(nDesvios*(vetor_desvio))
+	rangek = 2*(nDesvios*(vetor_desvio))
 	vetor_normalizado = vetor - media
-	vetor_normalizado = vetor_normalizado/range
+	vetor_normalizado = vetor_normalizado/rangek
 	return vetor_normalizado
 
 def norma_estatistica_local(vetor, vetor_media, vetor_desvio, nDesvios):
-	range = 2*(nDesvios*(vetor_desvio))
+	rangek = 2*(nDesvios*(vetor_desvio))
 	vetor_normalizado = vetor - vetor_media
-	vetor_normalizado = vetor_normalizado/range
+	vetor_normalizado = vetor_normalizado/rangek
 	return vetor_normalizado
 
 def norma_l2(vetor):
@@ -88,8 +88,8 @@ vetor2 = matriz[1][:]
 vetor3 = matriz[2][:]
 vetor_media = np.mean(matriz, axis=0)
 vetor_desvio = np.std(matriz, axis=0)
-max = np.max(matriz)
-min = np.min(matriz)
+maxk = np.maxk(matriz)
+mink = np.mink(matriz)
 media = -2.37
 desvio_padrao =  2.63
 nDesvios = 3
@@ -108,7 +108,7 @@ print(vetor)
 print(norma_l2(vetor))
 
 print('teste da função: max_min'.center(30,'*'))
-print(norma_max_min(vetor,max,min))
+print(norma_max_min(vetor,maxk,mink))
 
 print('teste da função: estatistica global'.center(30,'*'))
 print(norma_estatistica_global(vetor, media, desvio_padrao, nDesvios))
