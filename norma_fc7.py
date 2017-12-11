@@ -5,6 +5,11 @@ import os
 
 '''
 ###########################
+norma_estatistica_gcg
+input: vetor, vetor_medio da base(vetor), desvio padrão da norma dos vetores na base analisada(escalar)
+output: vetor normalizado
+
+###########################
 norma_l2
 input: vetor
 output: vetor normalizado
@@ -29,9 +34,14 @@ output: vetor normalizado
 
 def norma_max_min(vetor,max,min):
 	range = max - min
-	vetor_normalizado = vetor/range
+	vetor_normalizado = (vetor - min) /range
 	return vetor_normalizado
 	
+def norma_estatistica_padrao(vetor, vetor_medio, desvio_da_norma ):
+	vetor_normalizado = (vetor - vetor_medio)/ desvio_da_norma
+	return vetor_normalizado
+
+
 def norma_estatistica_global(vetor, media, vetor_desvio, nDesvios):
 	range = 2*(nDesvios*(vetor_desvio))
 	vetor_normalizado = vetor - media
