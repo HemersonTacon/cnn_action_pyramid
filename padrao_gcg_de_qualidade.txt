@@ -1,0 +1,8 @@
+Padrao GCG de qualidade
+'''
+1)descrição do que a funçao faz
+2)input 
+3)output (deixar claro o tipo de dados)
+4)exemplo incluindo entrada e saida, ilustrada.
+nome_da_funcao()
+'''
