@@ -1,3 +1,7 @@
+# function: Extract frames in video
+# input: video
+# output: folder with all frames in video
+
 import numpy as np
 import cv2
 import argparse
