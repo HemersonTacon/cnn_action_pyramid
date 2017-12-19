@@ -1,3 +1,7 @@
+#function: Extract fc7 features in video (folder with frames)
+#input: folder with frames, processing mode (GPU, CPU) and file with CNN settings (caffe) example in github
+#output: fc7 features file
+
 import numpy as np
 import sys
 import os
@@ -40,7 +44,7 @@ def get_params_dnn(param_file):
 	params = pd.read_csv(param_file, sep=" ")
 	return params
 
-
+#required parameters
 def preprocess_params(params):
 	
 	if(params['model_file'][0] == 'None' or os.path.isfile(params['model_file'][0] == False)):
