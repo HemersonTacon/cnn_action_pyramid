@@ -54,8 +54,13 @@ class Extractor(caffe.Net):
 		elif os.path.isdir(input_file):
 			if(ext is None):
 				ext = 'png'
+			list_folder = []
+			nomes = os.listdir(input_file)
+    
+			caminhos = [os.path.join(input_file, str(nome) + '.png') for nome in range(0,len(nomes))]
+			arquivos = [arq for arq in caminhos if os.path.isfile(arq)]
 			inputs = [caffe.io.load_image(img)
-                 		for img in glob.glob(input_file + '/*.' + ext)]
+ 				for img in arquivos]
 		else:
 			inputs = caffe.io.load_image(input_file)
 		
