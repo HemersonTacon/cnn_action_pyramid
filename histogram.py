@@ -3,25 +3,23 @@ import cv2
 import numpy as np
 import os
 from scipy.cluster.vq import kmeans2, vq
+import pandas as pd
 
 encode = "utf-8"
 
 def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("name", help="Video file name reduced by pca")
-	parser.add_argument("codedir", help="Directory of codebooks")
+	parser.add_argument("codename", help="Codebook file name")
 	parser.add_argument("-o", "--outdir", help="Output directory")
 	return parser.parse_args()
 
-def read_pca(name):
+def read_pca_as_np(name):
 
 	try:
 		with open(name, "r", encoding=encode) as file:
 			# Quebro por fragmentos, depois por linha, e depois por valor
-			pca_features = [[[float(item) if item != '' else 0.0 for item in line.split(" ") ] for line in snippet.split(" \n")] for snippet in file.read().split(" \n\n")]
-			# Ultimo elemento sempre fica vazio por causa do ultimo \n
-			del pca_features[-1]
-			#videos.append(pca_features)
+			pca_features = [[float(item) if item != '' else 0.0 for item in line.split(" ") ] for line in file.read().split("\n")]
 		
 		return np.array(pca_features)
 		
@@ -30,31 +28,23 @@ def read_pca(name):
 		print("With parameters: \n", vars(args))
 		return 0
 		
-def read_codebooks(dir):
+def read_codebook(name):
 
 	try:
-		'''
-		Para cada arquivo no diretorio dir, faco o split do nome do arquivo por '.' (ponto) e, se o ultimo elemento apos o split for a 
-		extensao que desejo, o nome o arquivo sera concatenado com o diretorio e vai compor a lista de nomes dos arquivos que serao abertos
-		'''
-		names = [os.path.join(dir, file) for file in os.listdir(dir) if file.split('.')[-1] == 'dic']
-		codebooks = []
+		codebook = []
 		
-		for name in names:
-			with open(name, "r", encoding=encode) as file:
-				# Quebro por pontos e depois por valor
-				cluster = [[float(value) if value != '' else 0.0 for value in point.split(" ")] for point in file.read().split("\n")]
-				# Ultimo elemento sempre fica vazio por causa do ultimo \n
-				#del cluster[-1]
-				codebooks.append(cluster)
-		
-		return codebooks
+		with open(name, "r", encoding=encode) as file:
+			# Quebro por pontos e depois por valor
+			codebook = [[float(value) if value != '' else 0.0 for value in point.split(" ")] for point in file.read().split("\n")]
+	
+		return codebook
 		
 	except Exception as e:
-		print("A problem occurred trying to read pca file: ", e)
+		print("A problem occurred trying to read codebook file: ", e)
 		print("With parameters: \n", vars(args))
 		return 0
-		
+
+# retorna o nivel de acordo com o numero de cnnflows em um fragmento
 def get_levels(n):
 	
 	if n == 17:
@@ -71,6 +61,7 @@ def get_levels(n):
 	else:
 		return 0
 		
+# retorna o intervalo correspondente de cnnflows para um determinado nivel
 def get_interval_by_level(n):
 
 	if n == 0:
@@ -88,41 +79,22 @@ def get_interval_by_level(n):
 		return 0,0
 		
 	
-def create_histograms(pca, codebooks):
+def create_histogram(pca, codebook):
 	
 	num_snippet  = len(pca)
-	num_snip_feat = len(pca[0])
-	num_levels = get_levels(num_snip_feat)
 	
 	# Crio um np.array com dimensoes numero de niveis e quantidade de pontos por cluster
-	histograms = np.zeros((num_levels, len(codebooks[0])), "float32")
-	
-	# Para cada level
-	for i in range(num_levels):
-		# Descubro as linhas que correspondem ao nivel atual
-		begin, end = get_interval_by_level(i)
-		# Inicializo o empilhamento de descritores
-		descriptors = np.array(pca[0][begin:end])
-		# Para cada snippet do video
-		for j in range(num_snippet):
-			# Se nao for aquele primeiro que ja empilhei na inicializacao
-			if not (j == 0):
-				# Transformo os descritores para esse nivel em um np.array
-				descriptor = np.array(pca[j][begin:end])
-				# Empilho os descritores
-				descriptors = np.vstack((descriptors, descriptor))
-				
-		words, distance = vq(descriptors, codebooks[i])
-		for w in words:
-			histograms[i][w] += 1
-		
+	histogram = np.zeros((len(codebook)), "int16")
+			
+	words, distance = vq(pca, codebook)
+	for w in words:
+		histogram[w] += 1
 
-	return histograms
+	return histogram
 	
-def write_histograms(name, outdir, histograms):
-
-	name = os.path.split(name)[1]
-	name = name.split('.')[0]
+def write_histogram(name, outdir, histogram):
+	
+	hist_dataframe = pd.DataFrame(histogram)
 	
 	try:	
 		# If path doesn't exists, make it
@@ -130,11 +102,13 @@ def write_histograms(name, outdir, histograms):
 			os.makedirs(outdir)
 
 		out_file = os.path.join(outdir, name) + ".desc"
-			
+		
+		hist_dataframe.to_csv(out_file, header=None, index=False)
+		
 		# With automatically closes output
-		with open(out_file, "w", encoding=encode) as output:
+		#with open(out_file, "w", encoding=encode) as output:
 			# Joining 
-			output.write("\n".join([" ".join(list(map(str, line))) for line in histograms.tolist()]))
+		#	output.write(" ".join(list(map(str, histogram.tolist()))))
 		
 		return 0
 		
@@ -144,13 +118,13 @@ def write_histograms(name, outdir, histograms):
 	
 def _main(args):
 	
-	pca = read_pca(args.name)
-	codebooks = read_codebooks(args.codedir)
-	histograms = create_histograms(pca, codebooks)
+	pca = read_pca_as_np(args.name)
+	codebook = read_codebook(args.codename)
+	histogram = create_histogram(pca, codebook)
 	if not args.outdir:
 		args.outdir = ''
-	
-	write_histograms(args.name, args.outdir, histograms)
+	name = os.path.basename(os.path.splitext(args.name)[0])
+	write_histogram(name, args.outdir, histogram)
 	
 	
 if __name__ == '__main__':

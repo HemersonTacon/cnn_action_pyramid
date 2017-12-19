@@ -2,17 +2,20 @@ import argparse
 import cv2
 import numpy as np
 import os
-from scipy.cluster.vq import kmeans2
+from scipy.cluster.vq import kmeans2, whiten, kmeans
 from sklearn import metrics, cluster
+import time
+import pandas as pd
 
 encode = "utf-8"
+threads_file = 'threads.txt'
 
 def _get_Args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("dir", help="Directory of dataset reduced by pca")
 	parser.add_argument("size", type=int, help="Size of codebook")
-	parser.add_argument("-n", "--name", help="Codebook file name")
-	parser.add_argument("-o", "--outdir", help="Output directory")
+	parser.add_argument("-n", "--name", help="Codebook file name", nargs='?', const='codebook', default='codebook')
+	parser.add_argument("-o", "--outdir", help="Output directory", nargs='?', const='', default='')
 	parser.add_argument("-i", "--iterations", type=int, help="Number of iterations of kmeans algorithm")
 	return parser.parse_args()
 
@@ -23,15 +26,15 @@ def read_pca(dir):
 		Para cada arquivo no diretorio dir, faco o split do nome do arquivo por '.' (ponto) e, se o ultimo elemento apos o split for a 
 		extensao que desejo, o nome o arquivo sera concatenado com o diretorio e vai compor a lista de nomes dos arquivos que serao abertos
 		'''
-		names = [os.path.join(dir, file) for file in os.listdir(dir) if file.split('.')[-1] == 'pca']
+		names = [os.path.join(dir, file) for file in os.listdir(dir) if os.path.splitext(file)[1] == '.pca']
 		videos = []
 		
 		for name in names:
 			with open(name, "r", encoding=encode) as file:
 				# Quebro por fragmentos, depois por linha, e depois por valor
-				pca_features = [[[float(item) if item != '' else 0.0 for item in line.split(" ") ] for line in snippet.split(" \n")] for snippet in file.read().split(" \n\n")]
+				pca_features = [[float(item) if item != '' else 0.0 for item in line.split(" ") ] for line in file.read().split("\n")]
 				# Ultimo elemento sempre fica vazio por causa do ultimo \n
-				del pca_features[-1]
+				#del pca_features[-1]
 				videos.append(pca_features)
 		
 		return videos
@@ -40,6 +43,16 @@ def read_pca(dir):
 		print("A problem occurred trying to read pca file: ", e)
 		print("With parameters: \n", vars(args))
 		return 0
+		
+def get_threads():
+
+	try:
+		with open(threads_file, "r", encoding=encode) as input:
+			# Reading number of threads
+			threads = int(input.read())
+			return threads
+	except Exception as e:
+		print("A problem ocurred trying to read the number of threads: ", e)
 		
 def get_levels(n):
 	
@@ -74,61 +87,77 @@ def get_interval_by_level(n):
 		return 0,0
 		
 	
-def create_codebooks(pca_videos, size, iter):
+def create_codebook(pca_videos, size, iter):
 	
 	num_videos  = len(pca_videos)
-	num_snip_feat = len(pca_videos[0][0])
-	num_levels = get_levels(num_snip_feat)
 	
-	codebooks = []
+	codebook = []
 	
-	# Para cada level
-	for i in range(num_levels):
-		# Descubro as linhas que correspondem ao nivel atual
-		begin, end = get_interval_by_level(i)
-		# Inicializo o empilhamento de descritores para esse nivel
-		descriptors = np.array(pca_videos[0][0][begin:end])
-		# Para cada video
-		for j in range(num_videos):
-			# Para cada snippet do video
-			for k in range(len(pca_videos[j])):
-				'''
-				Se nao for aquele primeiro que ja empilhei na inicializacao, ou seja, 
-				primeiro video (j==0) e primeiro snippet (k==0)
-				'''
-				if not (j == 0 and k == 0):
-					# Transformo os descritores para esse nivel em um np.array
-					descriptor = np.array(pca_videos[j][k][begin:end])
-					# Empilho os descritores
-					descriptors = np.vstack((descriptors, descriptor))
-		# Rodo o kmeans pra um nivel
-		# Em ordem os parâmetros passados são: dados, numero de clusters, 
-		#model = cluster.KMeans(n_clusters=size, max_iter=iter).fit(descriptors)
-		centroids, labels = kmeans2(descriptors, size, iter, minit='random', missing='warn')
-		#voc, variance = kmeans(descriptors, size, iter)
-		#labels = model.labels_
-		#centroids = model.cluster_centers_
-		codebooks.append(centroids)
-		score = metrics.silhouette_score(descriptors, labels, metric='euclidean')
-		print("Silhouette coefficient of codebook ",i,": ", score)
 
-	return codebooks
+	# Inicializo o empilhamento de descritores
+	descriptors = np.array(pca_videos[0])
+	#descriptors = np.reshape(descriptors, (descriptors.shape[0], 100))
+	#print(descriptors.shape)
+	# Para cada video
+	for j in range(1, num_videos):
+		# Transformo cnnflow reduzida em um np.array
+		descriptor = np.array(pca_videos[j])
+		#print(descriptor.shape)
+		# Empilho os descritores
+		descriptors = np.vstack((descriptors, descriptor))
 	
-def write_codebooks(name, outdir, codebooks):
+	
+	
+	# scipy kmeans que da problema e as vezes retorno codebooks com menos centroids do que o parametro passado
+	# Rodo o kmeans
+	# Em ordem os parâmetros passados são: dados, numero de clusters, numero de iteracoes
+	#descriptors = whiten(descriptors)
+	#print(time.ctime(), " Size before kmeans execution: ", size)
+	#print(time.ctime(), " Descriptors shape: ", descriptors.shape)
+	#voc, variance = kmeans(descriptors, size, iter, thresh=0.0000001, check_finite=True)
+	#print(time.ctime(), " Size after kmeans execution: ", size)
+	#print(time.ctime(), " VOC size: ", len(voc))
+	
+	# abordagem scipy.kmeans2 rodando 10 vezes e pegando o com melhor coeficiente de silhueta
+	'''best_s = -2
+	best_centroids = []
+	for i in range(iter):
+		centroids, labels = kmeans2(descriptors, size, 300, minit='random', missing='warn')
+		score = metrics.silhouette_score(descriptors, labels, metric='euclidean')
+		print("Silhouette coefficient of codebook: ", score)
+		if score > best_s:
+			best_s = score
+			best_centroids = centroids
+		
+	print("Best silhouette found: ", best_s)'''
+	
+	# abordagem simples do scipy.kmeans2
+	centroids, labels = kmeans2(descriptors, size, iter, minit='random', missing='warn')
+
+	
+	# abordagem do sklearn.kmeans que ocupa mais memeoria, porem pega o melhor dentro de um numero de inicializacoes
+	#model = cluster.KMeans(n_clusters=size, init='random', n_init = iter, n_jobs=get_threads()).fit(descriptors)
+	#labels = model.labels_
+	#centroids = model.cluster_centers_
+	#codebook = model.cluster_centers_
+	#del descriptors
+	codebook = centroids
+	return codebook
+	
+def write_codebook(name, outdir, codebook):
 
 	
 	try:	
 		# If path doesn't exists, make it
-		if not os.path.isdir(outdir):
+		if not os.path.isdir(outdir) and outdir != '':
 			os.makedirs(outdir)
 
-		for i in range(len(codebooks)):
-			out_file = os.path.join(outdir, name) + str(i) + ".dic"
-	
-			# With automatically closes output
-			with open(out_file, "w", encoding=encode) as output:
-				# Casting np.array to list then cast elements to str, join them with space and finally join rows with \n
-				output.write("\n".join([" ".join(list(map(str, line))) for line in codebooks[i].tolist()]))
+		out_file = os.path.join(outdir, name) + ".dic"
+
+		# With automatically closes output
+		with open(out_file, "w", encoding=encode) as output:
+			# Casting np.array to list then cast elements to str, join them with space and finally join rows with \n
+			output.write("\n".join([" ".join(list(map(str, line))) for line in codebook.tolist()]))
 			
 		return 0
 		
@@ -140,17 +169,20 @@ def _main(args):
 	
 	pca_videos = read_pca(args.dir)
 	if not args.iterations:
-		args.iterations = 20
-	codebooks = create_codebooks(pca_videos, args.size, args.iterations)
+		args.iterations = 10
+	codebook = create_codebook(pca_videos, args.size, args.iterations)
 	if not args.outdir:
 		args.outdir = ''
 	if not args.name:
 		args.name = "codebook"
 	
-	write_codebooks(args.name, args.outdir, codebooks)
+	write_codebook(args.name, args.outdir, codebook)
 	
 	
 if __name__ == '__main__':
 	# parse arguments
+	begin_time = time.ctime()
 	args = _get_Args()
 	_main(args)
+	end_time = time.ctime()
+	
