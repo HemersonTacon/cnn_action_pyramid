@@ -46,7 +46,7 @@ class Extractor(caffe.Net):
 			raise TypeError("Invalid layer name: " + layer)
 			 
 	
-	def extract(self, input_file, ext=None, center=None):
+	def extract(self, input_file, ext=None, center=True):
 		
 		#Load input
 		if input_file.endswith('npy'):
