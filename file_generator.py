@@ -3,6 +3,10 @@ import argparse
 import os
 
 encode = "utf-8"
+'''
+Cria arquivos intermediarios
+Foi utlizado apenas quando ainda nao tinhamos tudo pronto para poder desenvolver os modulos indepentemente
+'''
 
 def _get_Args():
 	parser = argparse.ArgumentParser()
