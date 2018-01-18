@@ -18,6 +18,7 @@ def _get_Args():
 	parser.add_argument("-o", "--outdir", help="Output directory of histograms", nargs='?', const='', default='')
 	parser.add_argument("-s", "--savecodes", help="The codebooks will be saved in disk with the informed name", nargs='?', const='codebook', default='codebook')
 	parser.add_argument("-i", "--iterations", type=int, help="Number of iterations of kmeans algorithm", default=10)
+	parser.add_argument("-c", "--concatenate", help="Concatenation option", action = 'store_true')
 	return parser.parse_args()
 
 def get_threads():
@@ -31,7 +32,7 @@ def get_threads():
 		print("A problem ocurred trying to read the number of threads: ", e)
 		
 	
-def create_all_histograms(pca_videos, codebooks):
+def create_all_histograms(pca_videos, codebooks, concatenate = 1):
 
 	video_histograms = []
 	
@@ -40,7 +41,7 @@ def create_all_histograms(pca_videos, codebooks):
 		video_histograms.append(histograms)
 	'''
 	for pca in pca_videos:
-		histograms = create_histogram(pca, codebooks)
+		histograms = create_histogram(pca, codebooks, concatenate)
 		video_histograms.append(histograms)
 	
 	return video_histograms
@@ -60,12 +61,13 @@ def write_all_histograms(dir, video_histograms, outdir):
 	return name_and_hist
 		
 		
-def BoF_for_each_level(level, indir, codebook_size, kmeans_iterations):
+def BoF_for_each_level(level, indir, codebook_size, kmeans_iterations, concatenate = False):
 
 	codebooks = []
 	pca_training = []
 
 	print(time.ctime(), ' Reading training pca videos...')
+	concat = 1
 	
 	for i in range(level):
 	
@@ -77,7 +79,13 @@ def BoF_for_each_level(level, indir, codebook_size, kmeans_iterations):
 	
 		
 		print(time.ctime(), ' Creating codebook with size', codebook_size,'...')
-		codebook = create_codebook(pca_videos, codebook_size, kmeans_iterations)
+		if concatenate:
+			if i < 3:
+				concat = 2 ** i
+			else:
+				concat = 10
+		
+		codebook = create_codebook(pca_videos, codebook_size, kmeans_iterations, concat)
 		print(time.ctime(), ' OK size: ',codebook_size)
 		
 		pca_training.append(pca_videos)
@@ -113,17 +121,24 @@ def save_codebook_for_each_level(codebooks, codebook_name, outdir, iterations):
 		write_codebook(cb_name, outdir, codebooks[i])
 		print(time.ctime(), ' OK')
 		
-def create_and_write_histogram_for_each_set(codebooks, pca_sets, indir, outdir):
+def create_and_write_histogram_for_each_set(codebooks, pca_sets, indir, outdir, concatenate = False):
 
 	all_histograms = {'training':[], 'validation':[], 'test':[]}
-
+	concat = 1
+	
 	for set in ['training', 'validation', 'test']:
 		
 		i = 0
 		for level, codebook in zip(pca_sets[set], codebooks):
 		
+			if concatenate:
+				if i < 3:
+					concat = 2 ** i
+				else:
+					concat = 10
+		
 			print(time.ctime(), ' Creating histograms of all videos in set ',set,' level ',str(i),'...')
-			video_histograms = create_all_histograms(level, codebook.tolist())
+			video_histograms = create_all_histograms(level, codebook.tolist(), concat)
 			print(time.ctime(), ' OK')
 			
 			print(time.ctime(), ' Writing all histrograms created...')
@@ -145,7 +160,7 @@ def _main(args):
 	pca_sets = {'training':[],'validation':[],'test':[]}
 	
 	# Faco o bag para cada nivel do conjunto de treino e salvo os codigos e os arquivos pca para criar os histogramas depois
-	codebooks, pca_sets['training'] = BoF_for_each_level(args.level, args.dir, args.size, args.iterations)
+	codebooks, pca_sets['training'] = BoF_for_each_level(args.level, args.dir, args.size, args.iterations, args.concatenate)
 	
 	# Gravo os codebooks em disco
 	save_codebook_for_each_level(codebooks, args.savecodes, args.outdir, args.iterations)
@@ -154,7 +169,7 @@ def _main(args):
 	pca_sets['validation'], pca_sets['test'] = read_pca_validation_and_test(args.level, args.dir)
 	
 	# Crio e gravo os histogramas de todos os conjuntos
-	create_and_write_histogram_for_each_set(codebooks, pca_sets, args.dir, args.outdir)	
+	create_and_write_histogram_for_each_set(codebooks, pca_sets, args.dir, args.outdir, args.concatenate)	
 	
 	
 if __name__ == '__main__':

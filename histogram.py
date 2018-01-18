@@ -79,14 +79,29 @@ def get_interval_by_level(n):
 		return 0,0
 		
 	
-def create_histogram(pca, codebook):
+def create_histogram(pca, codebook, concatenate = 1):
 	
-	num_snippet  = len(pca)
+	#num_snippet  = len(pca)
+	video_concat = []
+	
+	if concatenate > 1:
+			video_concat = np.empty((len(pca) // concatenate, len(pca[0]) * concatenate))
+			
+			for j in range(0, len(pca), concatenate):
+				temp = np.array([pca[j]])
+				
+				for i in range(1, concatenate):
+					temp = np.concatenate((temp, [pca[j + i]]), axis = 1)
+					
+				video_concat = temp
+				
+	else:
+		video_concat = pca
 	
 	# Crio um np.array com dimensoes numero de niveis e quantidade de pontos por cluster
 	histogram = np.zeros((len(codebook)), "int16")
 			
-	words, distance = vq(pca, codebook)
+	words, distance = vq(video_concat, codebook)
 	for w in words:
 		histogram[w] += 1
 

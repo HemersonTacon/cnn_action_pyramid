@@ -87,21 +87,40 @@ def get_interval_by_level(n):
 		return 0,0
 		
 	
-def create_codebook(pca_videos, size, iter):
+def create_codebook(pca_videos, size, iter, concatenate = 1):
 	
-	num_videos  = len(pca_videos)
 	
 	codebook = []
+	video_concat = []
 	
+	if concatenate > 1:
+		for k, video in enumerate(pca_videos):
+			temp_video = np.empty((len(video) // concatenate, len(video[0]) * concatenate))
+			
+			for j in range(0, len(video), concatenate):
+				temp = np.array([video[j]])
+				
+				for i in range(1, concatenate):
+					temp = np.concatenate((temp, [video[j + i]]), axis = 1)
+					
+				temp_video[ j // concatenate] = temp
+				
+			video_concat.append(temp_video)
+	else:
+		video_concat = pca_videos
 
+	num_videos  = len(video_concat)
+	#print("Num videos:", num_videos)
+	
 	# Inicializo o empilhamento de descritores
-	descriptors = np.array(pca_videos[0])
+	
+	descriptors = np.array(video_concat[0])
 	#descriptors = np.reshape(descriptors, (descriptors.shape[0], 100))
 	#print(descriptors.shape)
 	# Para cada video
 	for j in range(1, num_videos):
 		# Transformo cnnflow reduzida em um np.array
-		descriptor = np.array(pca_videos[j])
+		descriptor = np.array(video_concat[j])
 		#print(descriptor.shape)
 		# Empilho os descritores
 		descriptors = np.vstack((descriptors, descriptor))

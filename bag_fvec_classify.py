@@ -17,6 +17,7 @@ def _get_Args():
 	parser.add_argument("size", type=int, help="Size of codebook")
 	parser.add_argument("name", help="Name of fvec final file")
 	parser.add_argument("-i", "--iterations", type=int, help="Number of iterations of kmeans algorithm", default=10)
+	parser.add_argument("-c", "--concatenate", help="Concatenation option", action = 'store_true')
 	return parser.parse_args()
 	
 def concat_histograms(all_histograms, name, indir, outdir):
@@ -70,7 +71,7 @@ def _main(args):
 	pca_sets = {'training':[],'validation':[],'test':[]}
 	
 	# Faco o bag para cada nivel do conjunto de treino e salvo os codigos e os arquivos pca para criar os histogramas depois
-	codebooks, pca_sets['training'] = BoF.BoF_for_each_level(args.level, args.indir, args.size, args.iterations)
+	codebooks, pca_sets['training'] = BoF.BoF_for_each_level(args.level, args.indir, args.size, args.iterations, args.concatenate)
 	
 	# Gravo os codebooks em disco
 	BoF.save_codebook_for_each_level(codebooks, 'codebook', os.path.join(args.outdir, 'histograms'), args.iterations)
@@ -79,7 +80,7 @@ def _main(args):
 	pca_sets['validation'], pca_sets['test'] = BoF.read_pca_validation_and_test(args.level, args.indir)
 	
 	# Crio  e gravo os histogramas de todos os conjuntos
-	all_histograms = BoF.create_and_write_histogram_for_each_set(codebooks, pca_sets, args.indir, os.path.join(args.outdir, 'histograms'))
+	all_histograms = BoF.create_and_write_histogram_for_each_set(codebooks, pca_sets, args.indir, os.path.join(args.outdir, 'histograms'), args.concatenate)
 	
 	
 	
