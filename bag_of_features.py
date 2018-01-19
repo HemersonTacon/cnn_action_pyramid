@@ -3,22 +3,26 @@ import cv2
 import numpy as np
 import os
 from kmeans import read_pca, create_codebook, write_codebook
-from histogram import create_histogram, write_histogram
+from histogram import create_histogram, write_histogram, read_codebook
 import time
 from multiprocessing import Pool
+import re
 
 encode = "utf-8"
 threads_file = 'threads.txt'
 
 def _get_Args():
 	parser = argparse.ArgumentParser()
+	group = parser.add_mutually_exclusive_group()
 	parser.add_argument("dir", help="Directory of dataset reduced by pca divided in training, validation and test directories. Inside those directories are expected to exist the folders with each level.")
 	parser.add_argument("level", type=int, help="Number of cnnflow pyramid levels")
 	parser.add_argument("size", type=int, help="Size of codebook")
 	parser.add_argument("-o", "--outdir", help="Output directory of histograms", nargs='?', const='', default='')
-	parser.add_argument("-s", "--savecodes", help="The codebooks will be saved in disk with the informed name", nargs='?', const='codebook', default='codebook')
+	group.add_argument("-s", "--savecodes", help="The codebooks will be saved in disk with the informed name", nargs='?', const='codebook', default='codebook')
+	group.add_argument("-l", "--loadcodes", help="The codebooks will be loaded from disk from the informed directory")
 	parser.add_argument("-i", "--iterations", type=int, help="Number of iterations of kmeans algorithm", default=10)
-	parser.add_argument("-c", "--concatenate", help="Concatenation option", action = 'store_true')
+	parser.add_argument("-c", "--concatenate", help="Concatenation option with codebooks with different sizes", action = 'store_true')
+	parser.add_argument("-c2", "--concatenate2", help="Concatenation option with 17 histograms", action = 'store_true')
 	return parser.parse_args()
 
 def get_threads():
@@ -32,7 +36,7 @@ def get_threads():
 		print("A problem ocurred trying to read the number of threads: ", e)
 		
 	
-def create_all_histograms(pca_videos, codebooks, concatenate = 1):
+def create_all_histograms(pca_videos, codebooks, concatenate = 1, concatenate2 = 1):
 
 	video_histograms = []
 	
@@ -41,7 +45,16 @@ def create_all_histograms(pca_videos, codebooks, concatenate = 1):
 		video_histograms.append(histograms)
 	'''
 	for pca in pca_videos:
-		histograms = create_histogram(pca, codebooks, concatenate)
+		histograms = []
+		if concatenate2 > 1:
+			for i in range(concatenate2):
+				if i == 0:
+					histograms = create_histogram(pca[i::concatenate2], codebooks, concatenate)
+				else:
+					histograms = np.concatenate((histograms, create_histogram(pca[i::concatenate2], codebooks, concatenate)), axis = 0)
+		else:
+			histograms = create_histogram(pca, codebooks, concatenate)
+		 
 		video_histograms.append(histograms)
 	
 	return video_histograms
@@ -121,10 +134,11 @@ def save_codebook_for_each_level(codebooks, codebook_name, outdir, iterations):
 		write_codebook(cb_name, outdir, codebooks[i])
 		print(time.ctime(), ' OK')
 		
-def create_and_write_histogram_for_each_set(codebooks, pca_sets, indir, outdir, concatenate = False):
+def create_and_write_histogram_for_each_set(codebooks, pca_sets, indir, outdir, concatenate = False, concatenate2 = False):
 
 	all_histograms = {'training':[], 'validation':[], 'test':[]}
 	concat = 1
+	concat2 = 1
 	
 	for set in ['training', 'validation', 'test']:
 		
@@ -136,9 +150,15 @@ def create_and_write_histogram_for_each_set(codebooks, pca_sets, indir, outdir, 
 					concat = 2 ** i
 				else:
 					concat = 10
+					
+			if concatenate2:
+				if i < 3:
+					concat2 = 2 ** i
+				else:
+					concat2 = 10
 		
 			print(time.ctime(), ' Creating histograms of all videos in set ',set,' level ',str(i),'...')
-			video_histograms = create_all_histograms(level, codebook.tolist(), concat)
+			video_histograms = create_all_histograms(level, codebook.tolist(), concat, concat2)
 			print(time.ctime(), ' OK')
 			
 			print(time.ctime(), ' Writing all histrograms created...')
@@ -153,23 +173,66 @@ def create_and_write_histogram_for_each_set(codebooks, pca_sets, indir, outdir, 
 		
 	return all_histograms
 	
+def load_codebooks(level, dir):
+	
+	print(time.ctime(), ' Loading codebooks...')
+	
+	dic_files = [file for file in os.listdir(dir) if os.path.splitext(file)[1] == '.dic']
+	
+	# Ordenando pelo level
+	r = re.compile(r'_l(\d)_')
+	dic_files = sorted(dic_files, key=lambda x:r.search(x).group(0))
+	
+	codebooks = [read_codebook(os.path.join(dir, file)) for file in dic_files]
+	
+	print(time.ctime(), ' OK')
+	
+	return np.array(codebooks)
+	
+def read_pca_training(level, indir):
+
+	pca = []
+	
+	print(time.ctime(), ' Reading training pca videos...')
+	
+	for i in range(level):
+		
+		print(time.ctime(), " Level ",str(i))
+		# Diretorio com as cnnflows reduzidas por pca de cada nivel do conjunto training
+		pca_dir = os.path.join(indir, 'training', 'l'+str(i))
+		pca_videos = read_pca(pca_dir)
+		print(time.ctime(), ' OK')
+		
+		pca.append(pca_videos)
+			
+	return pca
+	
+	
 def _main(args):
 
 	print(time.ctime(), " Running Bag of features with following arguments: ", str(vars(args)))
 	
 	pca_sets = {'training':[],'validation':[],'test':[]}
 	
-	# Faco o bag para cada nivel do conjunto de treino e salvo os codigos e os arquivos pca para criar os histogramas depois
-	codebooks, pca_sets['training'] = BoF_for_each_level(args.level, args.dir, args.size, args.iterations, args.concatenate)
+	codebooks = []
 	
-	# Gravo os codebooks em disco
-	save_codebook_for_each_level(codebooks, args.savecodes, args.outdir, args.iterations)
+	if not args.loadcodes:
+		# Faco o bag para cada nivel do conjunto de treino e salvo os codigos e os arquivos pca para criar os histogramas depois
+		codebooks, pca_sets['training'] = BoF_for_each_level(args.level, args.dir, args.size, args.iterations, args.concatenate)
+		
+		# Gravo os codebooks em disco
+		save_codebook_for_each_level(codebooks, args.savecodes, args.outdir, args.iterations)
+	else:
+		pca_sets['training'] = read_pca_training(args.level, args.dir)
+		codebooks = load_codebooks(args.level, args.loadcodes)
+	
+	
 	
 	# Leio os arquivos do pca dos outros conjuntos para criar os histogramas tambem
 	pca_sets['validation'], pca_sets['test'] = read_pca_validation_and_test(args.level, args.dir)
 	
 	# Crio e gravo os histogramas de todos os conjuntos
-	create_and_write_histogram_for_each_set(codebooks, pca_sets, args.dir, args.outdir, args.concatenate)	
+	create_and_write_histogram_for_each_set(codebooks, pca_sets, args.dir, args.outdir, args.concatenate, args.concatenate2)	
 	
 	
 if __name__ == '__main__':

@@ -18,6 +18,7 @@ def _get_Args():
 	parser.add_argument("name", help="Name of fvec final file")
 	parser.add_argument("-i", "--iterations", type=int, help="Number of iterations of kmeans algorithm", default=10)
 	parser.add_argument("-c", "--concatenate", help="Concatenation option", action = 'store_true')
+	parser.add_argument("-c2", "--concatenate2", help="Concatenation option with 17 histograms", action = 'store_true')
 	return parser.parse_args()
 	
 def concat_histograms(all_histograms, name, indir, outdir):
@@ -80,7 +81,7 @@ def _main(args):
 	pca_sets['validation'], pca_sets['test'] = BoF.read_pca_validation_and_test(args.level, args.indir)
 	
 	# Crio  e gravo os histogramas de todos os conjuntos
-	all_histograms = BoF.create_and_write_histogram_for_each_set(codebooks, pca_sets, args.indir, os.path.join(args.outdir, 'histograms'), args.concatenate)
+	all_histograms = BoF.create_and_write_histogram_for_each_set(codebooks, pca_sets, args.indir, os.path.join(args.outdir, 'histograms'), args.concatenate, args.concatenate2)
 	
 	
 	
