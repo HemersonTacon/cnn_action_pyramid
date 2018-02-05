@@ -23,6 +23,7 @@ def _get_Args():
 	group.add_argument("-r", "--regular", help="Regular size of snippets", type=int)
 	parser.add_argument("-s", "--stride", help="Stride for snippets with regular sizes", type=int)
 	parser.add_argument("-n", "--normalize", help="L2 normalization of input data", action='store_true')
+	parser.add_argument("-i", "--individual", help="Generation of only one level", action='store_true')
 	#parser.add_argument("-s", "--seed", help="Seed of the random function", type=int)
 	return parser.parse_args()
 	
@@ -43,22 +44,23 @@ def get_threads():
 @frames contem fc7's de cada frame 
 @level quantidade de niveis da piramide
 '''
-def generate_cnn_flows_of_snippet(first_frame, last_frame, frames, level):
+def generate_cnn_flows_of_snippet(first_frame, last_frame, frames, level, individual):
 	
 	# criando a lista de cnnflows vazia para cada nível
 	cnn_flows = [[] for i in range(level)]
 	
-	# first_frame e last_frame são 1-indexed, entao subtraio uma unidade
-	first_frame_features = frames[first_frame - 1]
-	last_frame_features = frames[last_frame - 1]
+	if not individual or (individual and level == 1):
+		# first_frame e last_frame são 1-indexed, entao subtraio uma unidade
+		first_frame_features = frames[first_frame - 1]
+		last_frame_features = frames[last_frame - 1]
+		
+		# geracao das cnnflows a partir da subtracao das fc7's do primeiro e ultimo frame do snippet
+		# revendo o codigo agora, seria melhor usar np.array e fazer a subtracao direto
+		cnn_flow = [float(b) - float(a) for a, b in zip(first_frame_features, last_frame_features)]
+		# essa eh a cnnflow do nivel 0, que sempre existira
+		cnn_flows[0].append(cnn_flow)
 	
-	# geracao das cnnflows a partir da subtracao das fc7's do primeiro e ultimo frame do snippet
-	# revendo o condigo agora, seria melhor usar np.array e fazer a subtracao direto
-	cnn_flow = [float(b) - float(a) for a, b in zip(first_frame_features, last_frame_features)]
-	# essa eh a cnnflow do nivel 0, que sempre existira
-	cnn_flows[0].append(cnn_flow)
-	
-	if level > 1:
+	if (not individual and level > 1) or (individual and level == 2):
 		# quebro o snippet em 2
 		sub_snippet_size = math.floor((last_frame - first_frame + 1)/2)
 		# eh necessario que cada pedaco do snippet tenha no minimo 2 frames para realizar a subtracao
@@ -85,7 +87,7 @@ def generate_cnn_flows_of_snippet(first_frame, last_frame, frames, level):
 			
 			x = y + 1
 		
-	if level > 2:
+	if (not individual and level > 2) or (individual and level == 3):
 		sub_snippet_size = math.floor((last_frame - first_frame + 1)/4)
 		if sub_snippet_size < 2:
 			return cnn_flows
@@ -106,7 +108,7 @@ def generate_cnn_flows_of_snippet(first_frame, last_frame, frames, level):
 			
 			x = y + 1
 			
-	if level > 3:
+	if (not individual and level > 3) or (individual and level == 4):
 		# ultimo nivel tem sempre 10 snippets...
 		sub_snippet_size = math.floor((last_frame - first_frame + 1)/10)
 		if sub_snippet_size < 2:
@@ -138,7 +140,7 @@ def read_keyframes(name):
 	return key_frames.values
 
 	
-def create_pyramid(key_frames, frames, level, stride, regular):
+def create_pyramid(key_frames, frames, level, stride, regular, individual):
 
 	# Se for os keyframes foram lidos de arquivo preciso fazer essa conversao
 	if type(key_frames[0]) == type([]):
@@ -151,11 +153,14 @@ def create_pyramid(key_frames, frames, level, stride, regular):
 	for i in range(len(key_frames)):
 		
 		last_frame = key_frames[i]
-		# gera cnn flows de um snippet formed pelo intervalo fechado entre @first_frame e @last_frame
-		cnn_flows = generate_cnn_flows_of_snippet(first_frame, last_frame, frames, level)
-		for k in range(level):
-			# guardando as cnnflows separadamente para futuramente salvar em pastas separadas
-			cnn_flow_snippets[k].append(cnn_flows[k])
+		# gera cnn flows de um snippet formado pelo intervalo fechado entre @first_frame e @last_frame
+		cnn_flows = generate_cnn_flows_of_snippet(first_frame, last_frame, frames, level, individual)
+		if not individual:
+			for k in range(level):
+				# guardando as cnnflows separadamente para futuramente salvar em pastas separadas
+				cnn_flow_snippets[k].append(cnn_flows[k])
+		else:
+			cnn_flow_snippets[level - 1].append(cnn_flows[level - 1])
 		# Atualizacao do @first_frame
 		if not stride:
 			first_frame = last_frame + 1
@@ -164,7 +169,7 @@ def create_pyramid(key_frames, frames, level, stride, regular):
 
 	return cnn_flow_snippets
 	
-def write_cnn_flow(name, outdir, cnn_flow_snippets):
+def write_cnn_flow(name, outdir, cnn_flow_snippets, level, individual):
 
 	# desconsiderando o path
 	name = os.path.basename(name)
@@ -172,21 +177,37 @@ def write_cnn_flow(name, outdir, cnn_flow_snippets):
 	name = os.path.splitext(name)[0]
 	
 	try:	
-
-		for k in range(4):
+		if not individual:
+			for k in range(level):
+				# pasta para este nivel
+				out_dir = os.path.join(outdir, 'nivel'+str(k))
+				# If path doesn't exists, make it
+				if not os.path.isdir(out_dir):
+					# na execucao em paralela pode ser que eu tente criar um diretorio existente, por isso exist_ok = True
+					os.makedirs(out_dir, exist_ok = True)
+				# agregando o diretorio passado + nome + n_nivel + extensao de cnnflow
+				out_file = os.path.join(out_dir, name) + str(k) + ".cnnf"
+			
+				# With automatically closes output
+				with open(out_file, "w", encoding=encode) as output:
+					# Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
+					output.write("\n\n".join(["\n".join([" ".join(list(map(str, j))) for j in i]) for i in cnn_flow_snippets[k]]))
+		else:
+			# estiver criando apenas um nivel individualmente
 			# pasta para este nivel
-			out_dir = os.path.join(outdir, 'nivel'+str(k))
+			out_dir = os.path.join(outdir, 'nivel'+str(level - 1))
 			# If path doesn't exists, make it
 			if not os.path.isdir(out_dir):
 				# na execucao em paralela pode ser que eu tente criar um diretorio existente, por isso exist_ok = True
 				os.makedirs(out_dir, exist_ok = True)
 			# agregando o diretorio passado + nome + n_nivel + extensao de cnnflow
-			out_file = os.path.join(out_dir, name) + str(k) + ".cnnf"
+			out_file = os.path.join(out_dir, name) + str(level - 1) + ".cnnf"
 		
 			# With automatically closes output
 			with open(out_file, "w", encoding=encode) as output:
 				# Joining cnn flows elements with space and then joining cnn flows with \n and finally joining snippets with \n\n
-				output.write("\n\n".join(["\n".join([" ".join(list(map(str, j))) for j in i]) for i in cnn_flow_snippets[k]]))
+				# indice zero pois eh o caso de estar criando apenas um nivel individualmente
+				output.write("\n\n".join(["\n".join([" ".join(list(map(str, j))) for j in i]) for i in cnn_flow_snippets[level - 1]]))
 			
 		return 0
 		
@@ -196,7 +217,7 @@ def write_cnn_flow(name, outdir, cnn_flow_snippets):
 
 
 
-def cnnflow_pyramid(fc7_name, indir, key_dir, key_name, level, normalize, regular, stride, outdir):
+def cnnflow_pyramid(fc7_name, indir, key_dir, key_name, level, normalize, regular, stride, outdir, individual):
 	'''
 	Criacao das cnnflows de um arquivo fc7 passado @fc7_name presente no diretorio @indir
 	Realiza a divisao dos snippets de acordo com o arquio @key_name presente no diretorio @key_dir (opcional)
@@ -231,12 +252,12 @@ def cnnflow_pyramid(fc7_name, indir, key_dir, key_name, level, normalize, regula
 		key_frames = read_keyframes(os.path.join(key_dir, key_name)).tolist()
 		
 	# criacao da bendita piramide para um arquivo
-	cnn_flow_snippets = create_pyramid(key_frames, frames.tolist(), level, stride, regular)
+	cnn_flow_snippets = create_pyramid(key_frames, frames.tolist(), level, stride, regular, individual)
 	
 	if not outdir:
 		outdir = ''
 		
-	write_cnn_flow(fc7_name, outdir, cnn_flow_snippets)
+	write_cnn_flow(fc7_name, outdir, cnn_flow_snippets, level, individual)
 	
 def _main(args):
 	
@@ -285,10 +306,11 @@ def _main(args):
 		regular_list = [args.regular for i in fc7_files]
 		stride_list = [args.stride for i in fc7_files]
 		out_dir_list = [out_dir for i in fc7_files]
+		individual_list = [args.individual for i in fc7_files]
 		
 		# execucao em paralelo com um numero de thread disponiveis
 		with Pool(get_threads()) as p:
-			p.starmap(cnnflow_pyramid, zip(fc7_files, indir_list, key_dir_list, key_files, level_list, normalize_list, regular_list, stride_list, out_dir_list), chunksize=10)
+			p.starmap(cnnflow_pyramid, zip(fc7_files, indir_list, key_dir_list, key_files, level_list, normalize_list, regular_list, stride_list, out_dir_list, individual_list), chunksize=10)
 	
 	
 if __name__ == '__main__':
