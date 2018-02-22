@@ -9,6 +9,7 @@ import pandas as pd
 
 encode = "utf-8"
 threads_file = 'threads.txt'
+np.random.seed(1)
 
 def _get_Args():
 	parser = argparse.ArgumentParser()
