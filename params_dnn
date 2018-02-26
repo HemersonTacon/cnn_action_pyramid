@@ -1,0 +1,2 @@
+model_file pretrained_model mean img_dims input_scale raw_scale channel_swap layer
+/opt/caffe/models/bvlc_alexnet/deploy.prototxt /opt/caffe/models/bvlc_alexnet/bvlc_alexnet.caffemodel /opt/caffe/python/caffe/imagenet/ilsvrc_2012_mean.npy 227,227 None None None fc7

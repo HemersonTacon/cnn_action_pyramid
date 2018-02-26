@@ -1,0 +1,127 @@
+Caffe Instalação 
+
+1 - Primeiro execute esses comandos
+
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install -y build-essential cmake git pkg-config
+sudo apt-get install -y libprotobuf-dev libleveldb-dev libsnappy-dev libhdf5-serial-dev protobuf-compiler
+sudo apt-get install -y libatlas-base-dev 
+sudo apt-get install -y --no-install-recommends libboost-all-dev
+sudo apt-get install -y libgflags-dev libgoogle-glog-dev liblmdb-dev
+
+2 - Instale o python general
+sudo apt-get install -y python-pip
+
+3 - Instale o python 2.7 ou python 3.5 development tools
+
+python 2.7
+sudo apt-get install -y python-dev
+sudo apt-get install -y python-numpy python-scipy
+
+python 3.5
+sudo apt-get install -y python3-dev
+sudo apt-get install -y python3-numpy python3-scipy
+
+4 - Instale o opencv 3.1 usando o tutorial correspondente
+
+5 - Se você tiver uma placa de video NVIDIA
+
+5.1 - Ative o driver Nvidia, acessando "Software e Updates", depois na aba "Aditional Drivers", depois marque a opção "Using Nvidia Driver" e aperte "Apply Changes", o pc vai reiniciar depois desse processo.
+
+5.2 - Instale o CUDA Toolkit 8, acesse https://developer.nvidia.com/cuda-toolkit-archive e selecione a última versão do CUDA 8.0 disponível (8.0 GA2), selecione o instalador deb local 
+
+5.2.1 - cd ~/Downloads
+5.2.2 - sudo dpkg -i cuda-repo-ubuntu1604-8-0-local-ga2_8.0.61-1_amd64.deb`
+5.2.3 - sudo apt-get update
+5.2.4 - sudo apt-get install cuda
+
+5.3 - Baixe o cuDNN 5.1 for Cuda 8.0 da Nvidia: https://developer.nvidia.com/rdp/cudnn-download (Tem que se cadastrar) e extraia o arquivo 
+
+5.3.1 - sudo cp cuda/include/cudnn.h /usr/local/cuda/include/
+5.3.2
+sudo cp cuda/lib64/libcudnn.so /usr/local/cuda/lib64/
+sudo cp cuda/lib64/libcudnn.so.5 /usr/local/cuda/lib64/
+sudo cp cuda/lib64/libcudnn.so.5.1.10 /usr/local/cuda/lib64/
+sudo cp cuda/lib64/libcudnn_static.a /usr/local/cuda/lib64/
+
+6 - Acesse o diretório /opt (Pode ser feito em outro diretório)
+cd /opt
+
+7 - Clone o diretório da caffe
+sudo git clone https://github.com/BVLC/caffe
+
+8 - Acesse o diretório e dê checkout
+cd caffe
+sudo git checkout
+
+9 - Faça uma cópia do arquivo Makefile.config.example
+sudo cp Makefile.config.example Makefile.config
+
+10 - Instale o kate
+sudo apt-get install kate
+
+11 - Edite o arquivo de configuração
+kate ./Makefile.config &
+
+Edite essas linhas dessa forma se você esta usando o python 2.7
+PYTHON_INCLUDE := /usr/include/python2.7 /usr/local/lib/python2.7/dist-packages/numpy/core/include  
+WITH_PYTHON_LAYER := 1  
+INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include /usr/include/hdf5/serial  
+LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/hdf5/serial 
+
+Edite essas linhas dessa forma se você esta usando o python 3.5
+PYTHON_LIBRARIES := boost_python-py35 python3.5m
+PYTHON_INCLUDE := /usr/include/python3.5m /usr/local/lib/python3/dist-packages/numpy/core/include  
+WITH_PYTHON_LAYER := 1  
+INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include /usr/include/hdf5/serial  
+LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/hdf5/serial 
+
+Se você estiver usando o Cuda 8.0
+CUDA_DIR := /usr/local/cuda-8.0
+
+Se for usar o Cudnn, descomente a parte referente
+
+12 - Volte a pasta raiz do caffe, acesse a pasta python e execute 
+for req in $(cat requirements.txt); do pip install $req; done
+
+Se houver algum problema tente
+for req in $(cat requirements.txt); do sudo -H pip install $req --upgrade; done
+
+13 - Volte a pasta raiz do caffe e edite o arquivo Makefile
+kate ./Makefile
+
+Mude essa linha 
+NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+
+por essa linha
+NVCCFLAGS += -D_FORCE_INLINES -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+
+14 - Edite também o arquivo CMakeLists.txt e adicione a seguinte linha
+# ---[ Includes
+set(${CMAKE_CXX_FLAGS} "-D_FORCE_INLINES ${CMAKE_CXX_FLAGS}")
+
+15 - Make e Install
+make all
+make test
+make runtest
+make pycaffe   
+make distribute
+
+Se você tiver problemas com caffe.proto
+$ protoc src/caffe/proto/caffe.proto --cpp_out=.
+$ mkdir include/caffe/proto
+$ mv src/caffe/proto/caffe.pb.h include/caffe/proto
+
+16 - Exporte o path do caffe, editando o arquivo ~/.bashrc e adicionando
+export PYTHONPATH=/path/to/caffe-master/python:$PYTHONPATH
+
+
+
+
+
+ 
+
+
+
+
