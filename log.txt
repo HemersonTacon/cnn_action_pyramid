@@ -1,0 +1,5 @@
+log para o estado dos arquivo no dia: 26/02/2018
+
+Versão v1 parcialemente concluida:
+*Não conseguiu-se reproduzir completamente o artigo sugerido
+*Teste com a subtração sucessica de cnnFlows em andamento
